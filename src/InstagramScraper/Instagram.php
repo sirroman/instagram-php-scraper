@@ -221,6 +221,7 @@ class Instagram
      */
     public function getMedias($username, $count = 20, $maxId = '')
     {
+
         $account = $this->getAccount($username);
         return $this->getMediasByUserId($account->getId(), $count, $maxId);
     }
@@ -234,18 +235,16 @@ class Instagram
      * @return Media[]
      * @throws InstagramException
      */
-    public function getMediasByUserId($id, $count = 20, $cursor = '')
+    public function getMediasByUserId($id, $count = 20, $maxId = '')
     {
         $index = 0;
         $medias = [];
         $isMoreAvailable = true;
         while ($index < $count && $isMoreAvailable) {
-            $response = Request::get(Endpoints::getAccountMediasByUserIdJsonLink($id, $count, $cursor));
-            
+            $response = Request::get(Endpoints::getAccountMediasJsonLink($id, $maxId), $this->generateHeaders($this->userSession));
             if (static::HTTP_OK !== $response->code) {
                 throw new InstagramException('Response code is ' . $response->code . '. Body: ' . static::getErrorBody($response->body) . ' Something went wrong. Please report issue.');
             }
-            
             $arr = json_decode($response->raw_body, true, 512, JSON_BIGINT_AS_STRING);
             if (!is_array($arr)) {
                 throw new InstagramException('Response code is ' . $response->code . '. Body: ' . static::getErrorBody($response->body) . ' Something went wrong. Please report issue.');
@@ -265,12 +264,13 @@ class Instagram
             if (empty($nodes) || !isset($nodes)) {
                 return $medias;
             }
-            $cursor = $arr['data']['user']['edge_owner_to_timeline_media']['page_info']['end_cursor'];
+            $maxId = $arr['data']['user']['edge_owner_to_timeline_media']['page_info']['end_cursor'];
             $isMoreAvailable = $arr['data']['user']['edge_owner_to_timeline_media']['page_info']['has_next_page'];
         }
         return $medias;
     }
     
+
     /**
      * @param $mediaId
      *
@@ -336,52 +336,53 @@ class Instagram
      */
     public function getPaginateMedias($username, $maxId = '')
     {
-        $hasNextPage = true;
-        $medias = [];
-
-        $toReturn = [
-            'medias' => $medias,
-            'maxId' => $maxId,
-            'hasNextPage' => $hasNextPage,
-        ];
-
-        $response = Request::get(Endpoints::getAccountMediasJsonLink($username, $maxId),
-            $this->generateHeaders($this->userSession));
-
-        // use a raw constant in the code is not a good idea!!
-        //if ($response->code !== 200) {
-        if (static::HTTP_OK !== $response->code) {
-            throw new InstagramException('Response code is ' . $response->code . '. Body: ' . static::getErrorBody($response->body) . ' Something went wrong. Please report issue.');
-        }
-
-        $arr = json_decode($response->raw_body, true, 512, JSON_BIGINT_AS_STRING);
-
-        if (!is_array($arr)) {
-            throw new InstagramException('Response code is ' . $response->code . '. Body: ' . static::getErrorBody($response->body) . ' Something went wrong. Please report issue.');
-        }
-        $nodes = $arr['user']['media']['nodes'];
-
-        //if (count($arr['items']) === 0) {
-        // I generally use empty. Im not sure why people would use count really - If the array is large then count takes longer/has more overhead.
-        // If you simply need to know whether or not the array is empty then use empty.
-        if (empty($nodes)) {
-            return $toReturn;
-        }
-
-        foreach ($nodes as $mediaArray) {
-            $medias[] = Media::create($mediaArray);
-        }
-
-        $maxId = $arr['user']['media']['page_info']['end_cursor'];
-        $hasNextPage = $arr['user']['media']['page_info']['has_next_page'];
-
-        $toReturn = [
-            'medias' => $medias,
-            'maxId' => $maxId,
-            'hasNextPage' => $hasNextPage,
-        ];
-
-        return $toReturn;
+    	$account = $this->getAccount($username);
+    	$hasNextPage = true;
+    	$medias = [];
+    	
+    	$toReturn = [
+    		'medias' => $medias,
+    		'maxId' => $maxId,
+    		'hasNextPage' => $hasNextPage,
+    	];
+    	
+    	$response = Request::get(Endpoints::getAccountMediasJsonLink($account->getId(), $maxId),
+    			$this->generateHeaders($this->userSession));
+    	
+    	// use a raw constant in the code is not a good idea!!
+    	//if ($response->code !== 200) {
+    	if (static::HTTP_OK !== $response->code) {
+    		throw new InstagramException('Response code is ' . $response->code . '. Body: ' . static::getErrorBody($response->body) . ' Something went wrong. Please report issue.');
+    	}
+    	
+    	$arr = json_decode($response->raw_body, true, 512, JSON_BIGINT_AS_STRING);
+    	
+    	if (!is_array($arr)) {
+    		throw new InstagramException('Response code is ' . $response->code . '. Body: ' . static::getErrorBody($response->body) . ' Something went wrong. Please report issue.');
+    	}
+    	$nodes = $arr['data']['user']['edge_owner_to_timeline_media']['edges'];
+    	
+    	//if (count($arr['items']) === 0) {
+    	// I generally use empty. Im not sure why people would use count really - If the array is large then count takes longer/has more overhead.
+    	// If you simply need to know whether or not the array is empty then use empty.
+    	if (empty($nodes)) {
+    		return $toReturn;
+    	}
+    	
+    	foreach ($nodes as $mediaArray) {
+    		$medias[] = Media::create($mediaArray['node']);
+    	}
+    	
+    	$maxId = $arr['data']['user']['edge_owner_to_timeline_media']['page_info']['end_cursor'];
+    	$isMoreAvailable = $arr['data']['user']['edge_owner_to_timeline_media']['page_info']['has_next_page'];
+    	
+    	$toReturn = [
+    		'medias' => $medias,
+    		'maxId' => $maxId,
+    		'hasNextPage' => $hasNextPage,
+    	];
+    	
+    	return $toReturn;
     }
 
     /**
@@ -570,37 +571,37 @@ class Instagram
     {
         // Use the follow page to get the account. The follow url will redirect to the home page for the user,
         // which has the username embedded in the url.
-        
+
         if (!is_numeric($id)) {
             throw new \InvalidArgumentException('User id must be integer or integer wrapped in string');
         }
-        
+
         $url = Endpoints::getFollowUrl($id);
-        
+
         // Cut a request by disabling redirects.
         Request::curlOpt(CURLOPT_FOLLOWLOCATION, FALSE);
         $response = Request::get($url, $this->generateHeaders($this->userSession));
         Request::curlOpt(CURLOPT_FOLLOWLOCATION, TRUE);
-        
+
         if ($response->code === 400) {
             throw new InstagramException('Account with this id does not exist.');
         }
-        
+
         if ($response->code !== 302) {
             throw new InstagramException('Response code is ' . $response->code . '. Body: ' . static::getErrorBody($response->raw_body) . ' Something went wrong. Please report issue.');
         }
-        
+
         $cookies = static::parseCookies($response->headers['Set-Cookie']);
         $this->userSession['csrftoken'] = $cookies['csrftoken'];
-        
+
         // Get the username from the response url.
         $responseUrl = $response->headers['Location'];
         $urlParts = explode('/', rtrim($responseUrl, '/'));
         $username = end($urlParts);
-        
+
         return $username;
     }
-    
+
     /**
      * @param string $username
      *
