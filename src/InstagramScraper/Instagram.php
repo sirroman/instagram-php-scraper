@@ -6,6 +6,7 @@ use InstagramScraper\Exception\InstagramAuthException;
 use InstagramScraper\Exception\InstagramException;
 use InstagramScraper\Exception\InstagramNotFoundException;
 use InstagramScraper\Model\Account;
+use InstagramScraper\Model\AccountPage;
 use InstagramScraper\Model\Comment;
 use InstagramScraper\Model\Like;
 use InstagramScraper\Model\Location;
@@ -15,6 +16,7 @@ use InstagramScraper\Model\Tag;
 use InstagramScraper\Model\UserStories;
 use phpFastCache\CacheManager;
 use Unirest\Request;
+
 
 class Instagram
 {
@@ -275,11 +277,11 @@ class Instagram
     /**
      * @param string $username
      *
-     * @return Account
+     * @return AccountPage
      * @throws InstagramException
      * @throws InstagramNotFoundException
      */
-    public function getAccount($username)
+    public function getAccountPage($username) :?AccountPage
     {
         $response = Request::get(Endpoints::getAccountJsonLink($username), $this->generateHeaders($this->userSession));
         if (static::HTTP_NOT_FOUND === $response->code) {
@@ -293,7 +295,31 @@ class Instagram
         if (!isset($userArray['graphql']['user'])) {
             throw new InstagramNotFoundException('Account with this username does not exist', 404);
         }
-        return Account::create($userArray['graphql']['user']);
+        $accountPage = new AccountPage();
+        $accountPage->account = Account::create($userArray['graphql']['user']);
+
+        $nodes = $userArray['graphql']['user']['edge_owner_to_timeline_media']['edges'];
+        // fix - count takes longer/has more overhead
+        if (isset($nodes) && count($nodes)) {
+            foreach ($nodes as $mediaArray) {
+                $accountPage->medias[] = Media::create($mediaArray['node']);
+            }
+
+        }
+
+        return $accountPage;
+    }
+
+    /**
+     * @param string $username
+     *
+     * @return Account
+     * @throws InstagramException
+     * @throws InstagramNotFoundException
+     */
+    public function getAccount($username) :?Account
+    {
+        return $this->getAccountPage($username)->account;
     }
 
     /**

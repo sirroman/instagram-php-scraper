@@ -49,6 +49,9 @@ class InstagramTest extends TestCase
         self::$instagram->getAccountById(PHP_INT_MAX);
     }
 
+    /**
+     * @group getMedias
+     */
     public function testGetMedias()
     {
         $medias = self::$instagram->getMedias('kevin', 80);
@@ -79,10 +82,13 @@ class InstagramTest extends TestCase
         $this->assertEquals('kevin', $media->getOwner()->getUsername());
     }
 
+    /**
+     * @group locationTopMedias
+     */
     public function testGetLocationTopMediasById()
     {
-        $medias = self::$instagram->getCurrentTopMediasByTagName(1);
-        $this->assertEquals(9, count($medias));
+        $medias = self::$instagram->getCurrentTopMediasByTagName(4);
+        $this->assertGreaterThan(9, count($medias));
     }
 
     public function testGetLocationMediasById()
@@ -143,6 +149,20 @@ class InstagramTest extends TestCase
         $instagram = new Instagram();
         $nonPrivateAccountMedias = $instagram->getMediasByUserId(3);
         $this->assertEquals(20, count($nonPrivateAccountMedias));
+    }
+
+    /**
+     * @group accountPage
+     * @throws \InstagramScraper\Exception\InstagramException
+     * @throws \InstagramScraper\Exception\InstagramNotFoundException
+     */
+    public function testGetAccountPage()
+    {
+        $instagram = new Instagram();
+        $accountPage = $instagram->getAccountPage('kevin');
+        print_r($accountPage->medias);
+        $this->assertEquals(3,$accountPage->account->getId());
+        $this->assertEquals(12, count($accountPage->medias));
     }
 
     // TODO: Add test getMediaById
