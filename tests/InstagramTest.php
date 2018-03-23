@@ -160,9 +160,21 @@ class InstagramTest extends TestCase
     {
         $instagram = new Instagram();
         $accountPage = $instagram->getAccountPage('kevin');
-        print_r($accountPage->medias);
         $this->assertEquals(3,$accountPage->account->getId());
         $this->assertEquals(12, count($accountPage->medias));
+    }
+
+
+    /**
+     * @group getNonAuthMediaByUrl
+     */
+    public function testGetMediaPageByUrl()
+    {
+        $instagram = new Instagram();
+        $media = $instagram->getMediaByUrl('https://www.instagram.com/p/BHaRdodBouH');
+        $this->assertEquals('kevin', $media->getOwner()->getUsername());
+        $this->assertEquals(31, count($media->getComments()));
+        $this->assertEquals(10, count($media->getLikes()));
     }
 
     // TODO: Add test getMediaById

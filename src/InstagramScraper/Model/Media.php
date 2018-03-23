@@ -121,6 +121,11 @@ class Media extends AbstractModel
     protected $likesCount = 0;
 
     /**
+     * @var Account[]
+     */
+    protected $likes=[];
+
+    /**
      * @var
      */
     protected $locationId;
@@ -134,6 +139,11 @@ class Media extends AbstractModel
      * @var string
      */
     protected $commentsCount = 0;
+
+    /**
+     * @var Comment[]
+     */
+    protected $comments=[];
 
     /**
      * @var Media[]|array
@@ -349,6 +359,15 @@ class Media extends AbstractModel
     }
 
     /**
+     * @return Account[]
+     */
+    public function getLikes()
+    {
+        return $this->likes;
+    }
+
+
+    /**
      * @return mixed
      */
     public function getLocationId()
@@ -370,6 +389,14 @@ class Media extends AbstractModel
     public function getCommentsCount()
     {
         return $this->commentsCount;
+    }
+
+    /**
+     * @return Comment[]
+     */
+    public function getComments()
+    {
+        return $this->comments;
     }
 
     /**
@@ -499,9 +526,19 @@ class Media extends AbstractModel
                 break;
             case 'edge_media_to_comment':
                 $this->commentsCount = $arr[$prop]['count'];
+                if (isset($arr[$prop]['edges']) ){
+                    foreach ($arr[$prop]['edges'] as $comment){
+                        $this->comments[]= Comment::create($comment['node']);
+                    }
+                }
                 break;
             case 'edge_media_preview_like':
                 $this->likesCount = $arr[$prop]['count'];
+                if (isset($arr[$prop]['edges']) ){
+                    foreach ($arr[$prop]['edges'] as $like){
+                        $this->likes[]= Account::create($like['node']);
+                    }
+                }
                 break;
             case 'edge_liked_by':
                 $this->likesCount = $arr[$prop]['count'];
