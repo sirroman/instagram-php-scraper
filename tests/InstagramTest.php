@@ -20,6 +20,7 @@ class InstagramTest extends TestCase
         ]);
         $instanceCache = CacheManager::getInstance('files');
         self::$instagram = Instagram::withCredentials('raiym', 'youneverknow', $instanceCache);
+        self::$instagram = Instagram::withCredentials('aniapetrova2414', 'p0o9u7y6', $instanceCache);
         self::$instagram->login();
 
     }
@@ -175,6 +176,23 @@ class InstagramTest extends TestCase
         $this->assertEquals('kevin', $media->getOwner()->getUsername());
         $this->assertEquals(31, count($media->getComments()));
         $this->assertEquals(10, count($media->getLikes()));
+    }
+
+    /**
+     * @group getNonAuthMediaByCodeSideCar
+     */
+    public function testGetMediaPageByUrlSlidecar()
+    {
+        // slidecar
+        $instagram = new Instagram();
+        $media = $instagram->getMediaByCode('Bgo1NmHFZaB');
+        print_r($media);
+        $this->assertEquals(Media::TYPE_SIDECAR, $media->getType());
+        $this->assertEquals('beyonce', $media->getOwner()->getUsername());
+        $this->assertGreaterThan(15, count($media->getComments()));
+        $this->assertGreaterThan(10, count($media->getLikes()));
+        $this->assertEquals(5, count($media->getSidecarMedias()));
+
     }
 
     // TODO: Add test getMediaById
