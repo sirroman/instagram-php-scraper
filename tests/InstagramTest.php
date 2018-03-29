@@ -2,9 +2,6 @@
 
 require '../vendor/autoload.php';
 
-
-
-
 use InstagramScraper\Instagram;
 use InstagramScraper\Model\Media;
 use phpFastCache\CacheManager;
