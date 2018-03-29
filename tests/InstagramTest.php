@@ -24,6 +24,7 @@ class InstagramTest extends TestCase
             'path' => $sessionFolder
         ]);
         $instanceCache = CacheManager::getInstance('files');
+
         self::$instagram = Instagram::withCredentials($login, $pass, $instanceCache);
         self::$instagram->login();
 
@@ -187,10 +188,8 @@ class InstagramTest extends TestCase
      */
     public function testGetMediaPageByUrlSlidecar()
     {
-        // slidecar
         $instagram = new Instagram();
         $media = $instagram->getMediaByCode('Bgo1NmHFZaB');
-        print_r($media);
         $this->assertEquals(Media::TYPE_SIDECAR, $media->getType());
         $this->assertEquals('beyonce', $media->getOwner()->getUsername());
         $this->assertGreaterThan(15, count($media->getComments()));
@@ -199,6 +198,32 @@ class InstagramTest extends TestCase
 
     }
 
+    /**
+     * @group getNonAuthMediaByCodeVideo
+     */
+    public function testGetMediaPageByUrlVideo()
+    {
+        $instagram = new Instagram();
+        $media = $instagram->getMediaById(1733446317571985644);
+        $this->assertEquals(Media::TYPE_VIDEO, $media->getType());
+        $this->assertEquals(200, $this->getHttpCode($media->getVideoStandardResolutionUrl()));
+        $this->assertEquals('beyonce', $media->getOwner()->getUsername());
+        $this->assertGreaterThan(15, count($media->getComments()));
+        $this->assertGreaterThan(5, count($media->getLikes()));
+        $this->assertEquals(0, count($media->getSidecarMedias()));
+
+    }
+
+
+    protected function getHttpCode($url) {
+        $handle = curl_init($url);
+        curl_setopt($handle, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($handle, CURLOPT_NOBODY, true);
+        curl_exec($handle);
+        $httpCode= curl_getinfo($handle, CURLINFO_HTTP_CODE);
+        curl_close($handle);
+        return $httpCode;
+    }
     // TODO: Add test getMediaById
     // TODO: Add test getLocationById
 }
