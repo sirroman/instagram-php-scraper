@@ -78,7 +78,7 @@ class Instagram
         // use a raw constant in the code is not a good idea!!
         //if ($response->code === 404) {
         if (static::HTTP_NOT_FOUND === $response->code) {
-            throw new InstagramNotFoundException('Account with given username does not exist.',500);
+            throw new InstagramNotFoundException('Account with given username does not exist.',static::HTTP_NOT_FOUND);
         }
         // use a raw constant in the code is not a good idea!!
         //if ($response->code !== 200) {
@@ -182,7 +182,7 @@ class Instagram
     {
         $response = Request::get(Endpoints::getGeneralSearchJsonLink($username), $this->generateHeaders($this->userSession));
         if (static::HTTP_NOT_FOUND === $response->code) {
-            throw new InstagramNotFoundException('Account with given username does not exist.', 404);
+            throw new InstagramNotFoundException('Account with given username does not exist.', static::HTTP_NOT_FOUND);
         }
         if (static::HTTP_OK !== $response->code) {
             throw new InstagramException('Response code is ' . $response->code . '. Body: ' . static::getErrorBody($response->body) . ' Something went wrong. Please report issue.', $response->code);
