@@ -143,7 +143,18 @@ class Media extends AbstractModel
     /**
      * @var Comment[]
      */
-    protected $comments=[];
+
+    protected $comments = [];
+
+    /**
+     * @var bool
+     */
+    protected $hasMoreComments = false;
+
+    /**
+     * @var string
+     */
+    protected $commentsNextPage = '';
 
     /**
      * @var Media[]|array
@@ -400,6 +411,24 @@ class Media extends AbstractModel
     }
 
     /**
+
+     * @return bool
+     */
+    public function hasMoreComments()
+    {
+        return $this->hasMoreComments;
+    }
+
+    /**
+     * @return string
+     */
+    public function getCommentsNextPage()
+    {
+        return $this->commentsNextPage;
+    }
+
+    /**
+
      * @return Media[]|array
      */
     public function getSidecarMedias()
@@ -436,17 +465,17 @@ class Media extends AbstractModel
             case 'likes':
                 $this->likesCount = $arr[$prop]['count'];
                 break;
-            case 'thumbnail_resources':
+            case 'display_resources':
                 foreach ($value as $thumbnail) {
                     $thumbnailsUrl[] = $thumbnail['src'];
                     switch ($thumbnail['config_width']) {
-                        case 150:
+                        case 640:
                             $this->imageThumbnailUrl = $thumbnail['src'];
                             break;
-                        case 320:
+                        case 750:
                             $this->imageLowResolutionUrl = $thumbnail['src'];
                             break;
-                        case 640:
+                        case 1080:
                             $this->imageStandardResolutionUrl = $thumbnail['src'];
                             break;
                         default:
@@ -525,11 +554,19 @@ class Media extends AbstractModel
                 $this->link = Endpoints::getMediaPageLink($this->shortCode);
                 break;
             case 'edge_media_to_comment':
-                $this->commentsCount = $arr[$prop]['count'];
-                if (isset($arr[$prop]['edges']) ){
-                    foreach ($arr[$prop]['edges'] as $comment){
-                        $this->comments[]= Comment::create($comment['node']);
+                if (isset($arr[$prop]['count'])) {
+                    $this->commentsCount = (int) $arr[$prop]['count'];
+                }
+                if (isset($arr[$prop]['edges']) && is_array($arr[$prop]['edges'])) {
+                    foreach ($arr[$prop]['edges'] as $commentData) {
+                        $this->comments[] = Comment::create($commentData['node']);
                     }
+                }
+                if (isset($arr[$prop]['page_info']['has_next_page'])) {
+                    $this->hasMoreComments = (bool) $arr[$prop]['page_info']['has_next_page'];
+                }
+                if (isset($arr[$prop]['page_info']['end_cursor'])) {
+                    $this->commentsNextPage = (string) $arr[$prop]['page_info']['end_cursor'];
                 }
                 break;
             case 'edge_media_preview_like':
