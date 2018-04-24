@@ -63,7 +63,7 @@ class Media extends AbstractModel
     /**
      * @var array
      */
-    protected $squareThumbnailsUrl = [];
+    protected $squareImages = [];
 
     /**
      * @var array
@@ -283,9 +283,9 @@ class Media extends AbstractModel
     /**
      * @return array
      */
-    public function getSquareThumbnailsUrl()
+    public function getSquareImages()
     {
-        return $this->squareThumbnailsUrl;
+        return $this->squareImages;
     }
 
 
@@ -466,23 +466,27 @@ class Media extends AbstractModel
                 $this->likesCount = $arr[$prop]['count'];
                 break;
             case 'display_resources':
-                foreach ($value as $thumbnail) {
-                    $thumbnailsUrl[] = $thumbnail['src'];
-                    switch ($thumbnail['config_width']) {
+                foreach ($value as $media) {
+                    $mediasUrl[] = $media['src'];
+                    switch ($media['config_width']) {
                         case 640:
-                            $this->imageThumbnailUrl = $thumbnail['src'];
+                            $this->imageThumbnailUrl = $media['src'];
                             break;
                         case 750:
-                            $this->imageLowResolutionUrl = $thumbnail['src'];
+                            $this->imageLowResolutionUrl = $media['src'];
                             break;
                         case 1080:
-                            $this->imageStandardResolutionUrl = $thumbnail['src'];
+                            $this->imageStandardResolutionUrl = $media['src'];
                             break;
-                        default:
-                            ;
                     }
                 }
-                $this->squareThumbnailsUrl = $thumbnailsUrl;
+                break;
+            case 'thumbnail_resources':
+                $squareImagesUrl = [];
+                foreach ($value as $squareImage) {
+                    $squareImagesUrl[] = $squareImage['src'];
+                }
+                $this->squareImages = $squareImagesUrl;
                 break;
             case 'display_url':
                 $this->imageHighResolutionUrl = $value;
@@ -492,6 +496,9 @@ class Media extends AbstractModel
                 if (!isset($this->type)) {
                     $this->type = static::TYPE_IMAGE;
                 }
+                break;
+            case 'thumbnail_src':
+                $this->imageThumbnailUrl = $value;
                 break;
             case 'carousel_media':
                 $this->type = self::TYPE_CAROUSEL;
