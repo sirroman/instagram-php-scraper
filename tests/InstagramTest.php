@@ -175,6 +175,9 @@ class InstagramTest extends TestCase
         $instagram = new Instagram();
         $nonPrivateAccountMedias = $instagram->getMediasByUserId(3);
         $this->assertEquals(12, count($nonPrivateAccountMedias));
+
+        $nonPrivateAccountMedias = $instagram->getMediasByUserId(3, 50);
+        $this->assertEquals(50, count($nonPrivateAccountMedias));
     }
 
     /**
