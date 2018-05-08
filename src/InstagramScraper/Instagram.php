@@ -119,8 +119,12 @@ class Instagram
         }
         if (is_object($rawError)) {
             $str = '';
+
             foreach ($rawError as $key => $value) {
-                $str .= ' ' . $key . ' => ' . $value . ';';
+                if ( is_string($value)){
+                    $str .= ' ' . $key . ' => ' . $value . ';';
+                }
+
             }
             return $str;
         } else {
@@ -387,8 +391,9 @@ class Instagram
             ]);
 
             $response = Request::get(Endpoints::getAccountMediasJsonLink($variables), $this->generateHeaders($this->userSession, $this->generateGisToken($variables)));
-print_r($response);
+
             if (static::HTTP_OK !== $response->code) {
+//                print_r($response);
                 throw new InstagramException('Response code is ' . $response->code . '. Body: ' . static::getErrorBody($response->body) . ' Something went wrong. Please report issue.', $response->code);
             }
 

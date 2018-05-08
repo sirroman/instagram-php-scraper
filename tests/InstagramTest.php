@@ -14,22 +14,33 @@ class InstagramTest extends TestCase
 
     public static function setUpBeforeClass()
     {
+    }
 
-        require_once 'instagramAuth.php'; // content of this file: <?php $login = "my_instagram_login"; $pass = "my_instagram_pass";
+
+    public function setUpInstagram()
+    {
+
+        require 'instagramAuth.php'; // content of this file: <?php $login = "my_instagram_login"; $pass = "my_instagram_pass";
         $sessionFolder = __DIR__ . DIRECTORY_SEPARATOR . 'sessions' . DIRECTORY_SEPARATOR;
         CacheManager::setDefaultConfig([
             'path' => $sessionFolder
         ]);
+
         $instanceCache = CacheManager::getInstance('files');
 
-        self::$instagram = Instagram::withCredentials($login, $pass, $instanceCache);
-        self::$instagram->login();
+        $instagram = Instagram::withCredentials($login, $pass, $instanceCache);
+        $instagram->login();
+        return $instagram;
 
     }
 
+    /**
+     * @group getAccountByUsername
+     */
     public function testGetAccountByUsername()
     {
-        $account = self::$instagram->getAccount('kevin');
+        $i = $this->setUpInstagram();
+        $account = $i->getAccount('kevin');
         $this->assertEquals('kevin', $account->getUsername());
         $this->assertEquals('3', $account->getId());
     }
@@ -39,17 +50,18 @@ class InstagramTest extends TestCase
      */
     public function testGetAccountById()
     {
-
-        $account = self::$instagram->getAccountById(3);
+        $i = $this->setUpInstagram();
+        $account = $i->getAccountById(3);
         $this->assertEquals('kevin', $account->getUsername());
         $this->assertEquals('3', $account->getId());
     }
 
     public function testGetAccountByIdWithInvalidNumericId()
     {
+        $i = $this->setUpInstagram();
         // PHP_INT_MAX is far larger than the greatest id so far and thus does not represent a valid account.
         $this->expectException(\InstagramScraper\Exception\InstagramNotFoundException::class);
-        self::$instagram->getAccountById(PHP_INT_MAX);
+        $i->getAccountById(PHP_INT_MAX);
     }
 
     /**
@@ -57,31 +69,36 @@ class InstagramTest extends TestCase
      */
     public function testGetMedias()
     {
-        $medias = self::$instagram->getMedias('kevin', 80);
+        $i = $this->setUpInstagram();
+        $medias = $i->getMedias('kevin', 80);
         $this->assertEquals(80, sizeof($medias));
     }
 
     public function testGet100Medias()
     {
-        $medias = self::$instagram->getMedias('kevin', 100);
+        $i = $this->setUpInstagram();
+        $medias = $i->getMedias('kevin', 100);
         $this->assertEquals(100, sizeof($medias));
     }
 
     public function testGetMediasByTag()
     {
-        $medias = self::$instagram->getMediasByTag('youneverknow', 20);
+        $i = $this->setUpInstagram();
+        $medias =$i->getMediasByTag('youneverknow', 20);
         $this->assertEquals(20, sizeof($medias));
     }
 
     public function testGetMediaByCode()
     {
-        $media = self::$instagram->getMediaByCode('BHaRdodBouH');
+        $i = $this->setUpInstagram();
+        $media = $i->getMediaByCode('BHaRdodBouH');
         $this->assertEquals('kevin', $media->getOwner()->getUsername());
     }
 
     public function testGetMediaByUrl()
     {
-        $media = self::$instagram->getMediaByUrl('https://www.instagram.com/p/BHaRdodBouH');
+        $i = $this->setUpInstagram();
+        $media = $i->getMediaByUrl('https://www.instagram.com/p/BHaRdodBouH');
         $this->assertEquals('kevin', $media->getOwner()->getUsername());
     }
 
@@ -90,25 +107,29 @@ class InstagramTest extends TestCase
      */
     public function testGetLocationTopMediasById()
     {
-        $medias = self::$instagram->getCurrentTopMediasByTagName(4);
+        $i = $this->setUpInstagram();
+        $medias = $i->getCurrentTopMediasByTagName(4);
         $this->assertGreaterThan(9, count($medias));
     }
 
     public function testGetLocationMediasById()
     {
-        $medias = self::$instagram->getMediasByLocationId(1);
+        $i = $this->setUpInstagram();
+        $medias = $i->getMediasByLocationId(1);
         $this->assertEquals(12, count($medias));
     }
 
     public function testGetLocationById()
     {
-        $location = self::$instagram->getLocationById(1);
+        $i = $this->setUpInstagram();
+        $location =$i->getLocationById(1);
         $this->assertEquals('Dog Patch Labs', $location->getName());
     }
 
     public function testGetMediaByTag()
     {
-        $medias = self::$instagram->getMediasByTag('hello');
+        $i = $this->setUpInstagram();
+        $medias = $i->getMediasByTag('hello');
         echo json_encode($medias);
     }
 
@@ -140,12 +161,14 @@ class InstagramTest extends TestCase
      */
     public function testGetUsernameById()
     {
+        $this::setUpInstagram();
         $username = self::$instagram->getUsernameById(3);
         $this->assertEquals('kevin', $username);
     }
     
     /**
      * @group getMediasByIserId
+     * @group noAuth
      */
     public function testGetMediasByUserId()
     {
@@ -156,6 +179,7 @@ class InstagramTest extends TestCase
 
     /**
      * @group accountPage
+     * @group noAuth
      * @throws \InstagramScraper\Exception\InstagramException
      * @throws \InstagramScraper\Exception\InstagramNotFoundException
      */
@@ -170,18 +194,20 @@ class InstagramTest extends TestCase
 
     /**
      * @group getNonAuthMediaByUrl
+     * @group noAuth
      */
     public function testGetMediaPageByUrl()
     {
         $instagram = new Instagram();
         $media = $instagram->getMediaByUrl('https://www.instagram.com/p/BHaRdodBouH');
         $this->assertEquals('kevin', $media->getOwner()->getUsername());
-        $this->assertEquals(31, count($media->getComments()));
+        $this->assertGreaterThan(20, count($media->getComments()));
         $this->assertEquals(10, count($media->getLikes()));
     }
 
     /**
      * @group getNonAuthMediaByCodeSideCar
+     * @group noAuth
      */
     public function testGetMediaPageByUrlSlidecar()
     {
@@ -190,13 +216,14 @@ class InstagramTest extends TestCase
         $this->assertEquals(Media::TYPE_SIDECAR, $media->getType());
         $this->assertEquals('beyonce', $media->getOwner()->getUsername());
         $this->assertGreaterThan(15, count($media->getComments()));
-        $this->assertGreaterThan(10, count($media->getLikes()));
+        $this->assertGreaterThan(5, count($media->getLikes()));
         $this->assertEquals(5, count($media->getSidecarMedias()));
 
     }
 
     /**
      * @group getNonAuthMediaByCodeVideo
+     * @group noAuth
      */
     public function testGetMediaPageByUrlVideo()
     {
