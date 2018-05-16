@@ -126,12 +126,6 @@ class InstagramTest extends TestCase
         $this->assertEquals('Dog Patch Labs', $location->getName());
     }
 
-    public function testGetMediaByTag()
-    {
-        $i = $this->setUpInstagram();
-        $medias = $i->getMediasByTag('hello');
-        echo json_encode($medias);
-    }
 
     public function testGetIdFromCode()
     {
@@ -239,6 +233,16 @@ class InstagramTest extends TestCase
         $this->assertGreaterThan(5, count($media->getLikes()));
         $this->assertEquals(0, count($media->getSidecarMedias()));
 
+    }
+
+    /**
+     * @group getNoAuthMediasByTag
+     * @group noAuth
+     */
+    public function testNoAuthGetMediasByTag(){
+        $instagram = new Instagram();
+        $medias = $instagram->getMediasByTag('bnw',30);
+        $this->assertEquals(30, count($medias));
     }
 
 
