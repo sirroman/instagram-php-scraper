@@ -15,7 +15,8 @@ class Location extends AbstractModel
         'slug' => 'slug',
         'lat' => 'lat',
         'lng' => 'lng',
-        'modified' => 'modified'
+        'modified' => 'modified',
+        'profile_pic_url' => 'profilePicUrl'
     ];
     /**
      * @var
@@ -26,11 +27,11 @@ class Location extends AbstractModel
      */
     protected $hasPublicPage;
     /**
-     * @var
+     * @var string
      */
     protected $name;
     /**
-     * @var
+     * @var string
      */
     protected $slug;
     /**
@@ -52,6 +53,11 @@ class Location extends AbstractModel
     protected $modified;
 
     /**
+     * @var string
+     */
+    protected $profilePicUrl;
+
+    /**
      * @return mixed
      */
     public function getId()
@@ -68,7 +74,7 @@ class Location extends AbstractModel
     }
 
     /**
-     * @return mixed
+     * @return string
      */
     public function getName()
     {
@@ -76,7 +82,7 @@ class Location extends AbstractModel
     }
 
     /**
-     * @return mixed
+     * @return string
      */
     public function getSlug()
     {
@@ -105,5 +111,12 @@ class Location extends AbstractModel
     public function getModified()
     {
         return $this->modified;
+    }
+
+    /**
+     * @return string
+     */
+    public function getProfilePicUrl(){
+        return $this->profilePicUrl;
     }
 }

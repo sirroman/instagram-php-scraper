@@ -12,15 +12,21 @@ class InstagramTest extends TestCase
 {
     private static $instagram;
 
+    private static $username;
+    private static $password;
+
     public static function setUpBeforeClass()
     {
+        require 'instagramAuth.php'; // content of this file: <?php $login = "my_instagram_login"; $pass = "my_instagram_pass";
+        self::$username = $login;
+        self::$password = $pass;
     }
 
 
-    public function setUpInstagram()
+    public static function setUpInstagram()
     {
 
-        require 'instagramAuth.php'; // content of this file: <?php $login = "my_instagram_login"; $pass = "my_instagram_pass";
+
         $sessionFolder = __DIR__ . DIRECTORY_SEPARATOR . 'sessions' . DIRECTORY_SEPARATOR;
         CacheManager::setDefaultConfig([
             'path' => $sessionFolder
@@ -28,9 +34,9 @@ class InstagramTest extends TestCase
 
         $instanceCache = CacheManager::getInstance('files');
 
-        $instagram = Instagram::withCredentials($login, $pass, $instanceCache);
-        $instagram->login();
-        return $instagram;
+        self::$instagram = Instagram::withCredentials(self::$username, self::$password, $instanceCache);
+        self::$instagram->login();
+//        return $instagram;
 
     }
 
@@ -39,8 +45,8 @@ class InstagramTest extends TestCase
      */
     public function testGetAccountByUsername()
     {
-        $i = $this->setUpInstagram();
-        $account = $i->getAccount('kevin');
+        self::setUpInstagram();
+        $account = self::$instagram->getAccount('kevin');
         $this->assertEquals('kevin', $account->getUsername());
         $this->assertEquals('3', $account->getId());
     }
@@ -119,11 +125,18 @@ class InstagramTest extends TestCase
         $this->assertEquals(12, count($medias));
     }
 
+    /**
+     * @group getLocationById
+     * @group noAuth
+     * @throws \InstagramScraper\Exception\InstagramException
+     * @throws \InstagramScraper\Exception\InstagramNotFoundException
+     */
     public function testGetLocationById()
     {
-        $i = $this->setUpInstagram();
-        $location =$i->getLocationById(1);
-        $this->assertEquals('Dog Patch Labs', $location->getName());
+        $i = new Instagram();
+        $location =$i->getLocationById(1032158659);
+        $this->assertEquals('Публичная библиотека. Центр культурных программ', $location->getName());
+        $this->assertEquals(200, $this->getHttpCode($location->getProfilePicUrl()));
     }
 
 

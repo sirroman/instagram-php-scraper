@@ -725,7 +725,7 @@ class Instagram
             $commentsUrl = Endpoints::getLastLikesByCode($code, $numberOfLikesToRetreive, $maxId);
             $response = Request::get($commentsUrl, $this->generateHeaders($this->userSession));
             if ($response->code !== 200) {
-                throw new InstagramException('Response code is ' . $response->code . '. Body: ' . $response->body . ' Something went wrong. Please report issue.', $response->code);
+                throw new InstagramException('Response code is ' . $response->code . '. Body: ' . ' Something went wrong. Please report issue.', $response->code);
             }
             $cookies = self::parseCookies($response->headers['Set-Cookie']);
             $this->userSession['csrftoken'] = $cookies['csrftoken'];
@@ -1016,8 +1016,8 @@ class Instagram
      */
     public function getLocationById($facebookLocationId)
     {
-        $response = Request::get(Endpoints::getMediasJsonByLocationIdLink($facebookLocationId),
-            $this->generateHeaders($this->userSession));
+        $response = Request::get(Endpoints::getMediasJsonByLocationIdLink($facebookLocationId));
+
         if ($response->code === 404) {
             throw new InstagramNotFoundException('Location with this id doesn\'t exist', 404);
         }
@@ -1027,7 +1027,7 @@ class Instagram
         $cookies = static::parseCookies($response->headers['Set-Cookie']);
         $this->userSession['csrftoken'] = $cookies['csrftoken'];
         $jsonResponse = json_decode($response->raw_body, true, 512, JSON_BIGINT_AS_STRING);
-        return Location::create($jsonResponse['location']);
+        return Location::create($jsonResponse['graphql']['location']);
     }
 
     /**
