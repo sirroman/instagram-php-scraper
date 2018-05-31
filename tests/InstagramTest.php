@@ -118,6 +118,7 @@ class InstagramTest extends TestCase
         $this->assertGreaterThan(9, count($medias));
     }
 
+
     public function testGetLocationMediasById()
     {
         $i = $this->setUpInstagram();
@@ -128,15 +129,33 @@ class InstagramTest extends TestCase
     /**
      * @group getLocationById
      * @group noAuth
-     * @throws \InstagramScraper\Exception\InstagramException
-     * @throws \InstagramScraper\Exception\InstagramNotFoundException
      */
     public function testGetLocationById()
     {
         $i = new Instagram();
         $location =$i->getLocationById(1032158659);
         $this->assertEquals('Публичная библиотека. Центр культурных программ', $location->getName());
+//        $this->assertEquals(200, $this->getHttpCode($location->getProfilePicUrl()));
+        $this->assertEquals(39.7263,$location->getLng());
+        $this->assertEquals(47.22837, $location->getLat());
+    }
+
+
+    /**
+     * @group getMediasByLocationId
+     * @group noAuth
+     */
+    public function testПetMediasByLocationId()
+    {
+
+        $i = new Instagram();
+
+        $location =$i->getMediasByLocationId(1032158659);
+
+        $this->assertEquals('Публичная библиотека. Центр культурных программ', $location->getName());
         $this->assertEquals(200, $this->getHttpCode($location->getProfilePicUrl()));
+        $this->assertEquals(39.7263, $location->getLng());
+        $this->assertEquals(47.22837,$location->getLat());
     }
 
 
