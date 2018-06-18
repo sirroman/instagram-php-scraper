@@ -133,6 +133,41 @@ class Location extends AbstractModel
         return $this->profilePicUrl;
     }
 
+    /**
+     * @return string
+     */
+    public function getMediaCount(){
+        return $this->mediaCount;
+    }
+
+    /**
+     * @return string
+     */
+    public function getCountryId(){
+        return $this->countryId;
+    }
+
+    /**
+     * @return string
+     */
+    public function getCountryName(){
+        return $this->countryName;
+    }
+
+
+    /**
+     * @return string
+     */
+    public function getCityId(){
+        return $this->cityId;
+    }
+
+    /**
+     * @return string
+     */
+    public function getCityName(){
+        return $this->cityName;
+    }
 
     protected function initLocationMedias($value, $prop, $props)
     {
