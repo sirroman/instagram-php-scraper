@@ -16,7 +16,9 @@ class Location extends AbstractModel
         'lat' => 'lat',
         'lng' => 'lng',
         'modified' => 'modified',
-        'profile_pic_url' => 'profilePicUrl'
+        'profile_pic_url' => 'profilePicUrl',
+        'edge_location_to_media' => 'initLocationMedias',
+        'directory' => 'initDirectory'
     ];
     /**
      * @var
@@ -56,6 +58,17 @@ class Location extends AbstractModel
      * @var string
      */
     protected $profilePicUrl;
+
+    /**
+     * @var int
+     */
+    protected $mediaCount;
+
+    protected $countryId;
+    protected $countryName;
+
+    protected $cityId;
+    protected $cityName;
 
     /**
      * @return mixed
@@ -118,5 +131,20 @@ class Location extends AbstractModel
      */
     public function getProfilePicUrl(){
         return $this->profilePicUrl;
+    }
+
+
+    protected function initLocationMedias($value, $prop, $props)
+    {
+
+//        print_r($value);
+        $this->mediaCount = $value['count'];
+    }
+
+    protected function initDirectory($value, $prop, $props){
+            $this->countryId    = $value['country']['id'];
+            $this->countryName  = $value['country']['name'];
+            $this->cityId       = $value['city']['id'];
+            $this->cityName     = $value['city']['name'];
     }
 }

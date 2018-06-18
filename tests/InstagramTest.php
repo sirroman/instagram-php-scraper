@@ -138,6 +138,7 @@ class InstagramTest extends TestCase
 //        $this->assertEquals(200, $this->getHttpCode($location->getProfilePicUrl()));
         $this->assertEquals(39.7263,$location->getLng());
         $this->assertEquals(47.22837, $location->getLat());
+//        print_r($location);
     }
 
 
@@ -145,7 +146,7 @@ class InstagramTest extends TestCase
      * @group getMediasByLocationId
      * @group noAuth
      */
-    public function testПetMediasByLocationId()
+    public function testGetMediasByLocationId()
     {
 
         $i = new Instagram();
