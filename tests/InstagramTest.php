@@ -151,12 +151,9 @@ class InstagramTest extends TestCase
 
         $i = new Instagram();
 
-        $location =$i->getMediasByLocationId(1032158659);
-
-        $this->assertEquals('Публичная библиотека. Центр культурных программ', $location->getName());
-        $this->assertEquals(200, $this->getHttpCode($location->getProfilePicUrl()));
-        $this->assertEquals(39.7263, $location->getLng());
-        $this->assertEquals(47.22837,$location->getLat());
+        $medias =$i->getMediasByLocationId(1032158659);
+        $this->assertEquals(12, count($medias));
+        $this->assertGreaterThan(1000000000, $medias[0]->getId());
     }
 
 
