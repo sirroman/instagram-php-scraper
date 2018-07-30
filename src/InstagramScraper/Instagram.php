@@ -13,6 +13,7 @@ use InstagramScraper\Model\Location;
 use InstagramScraper\Model\Media;
 use InstagramScraper\Model\Story;
 use InstagramScraper\Model\Tag;
+use InstagramScraper\Model\TagPage;
 use InstagramScraper\Model\UserStories;
 use InvalidArgumentException;
 use phpFastCache\Cache\ExtendedCacheItemPoolInterface;
@@ -807,15 +808,16 @@ class Instagram
      * @param string $maxId
      * @param string $minTimestamp
      *
-     * @return Media[]
+     * @return TagPage
      * @throws InstagramException
      */
-    public function getMediasByTag($tag, $count = 12, $maxId = '', $minTimestamp = null)
+    public function getTagPage($tag, $count = 12, $maxId = '', $minTimestamp = null)
     {
         $index = 0;
         $medias = [];
         $mediaIds = [];
         $hasNextPage = true;
+        $tagPage = new TagPage();
         while ($index < $count && $hasNextPage) {
             $response = Request::get(Endpoints::getMediasJsonByTagLink($tag, $maxId),
                 $this->generateHeaders($this->userSession));
@@ -833,32 +835,54 @@ class Instagram
                 throw new InstagramException('Response decoding failed. Returned data corrupted or this library outdated. Please report issue');
             }
             if (empty($arr['graphql']['hashtag']['edge_hashtag_to_media']['count'])) {
-                return [];
+                break;
             }
+            $tagPage->count = $arr['graphql']['hashtag']['edge_hashtag_to_media']['count'];
 
             $nodes = $arr['graphql']['hashtag']['edge_hashtag_to_media']['edges'];
             foreach ($nodes as $mediaArray) {
                 if ($index === $count) {
-                    return $medias;
+                    break;
                 }
                 $media = Media::create($mediaArray['node']);
                 if (in_array($media->getId(), $mediaIds)) {
-                    return $medias;
+                    break;
                 }
                 if (isset($minTimestamp) && $media->getCreatedTime() < $minTimestamp) {
-                    return $medias;
+                    break;
                 }
                 $mediaIds[] = $media->getId();
                 $medias[] = $media;
                 $index++;
             }
             if (empty($nodes)) {
-                return $medias;
+                $medias=[];
             }
             $maxId = $arr['graphql']['hashtag']['edge_hashtag_to_media']['page_info']['end_cursor'];
             $hasNextPage = $arr['graphql']['hashtag']['edge_hashtag_to_media']['page_info']['has_next_page'];
+
+            $nodesTop = $arr['graphql']['hashtag']['edge_hashtag_to_top_posts']['edges'];
+            foreach ($nodesTop as $mediaArray) {
+                $tagPage->topMedias[$mediaArray['node']['id']] = Media::create($mediaArray['node']);
+            }
         }
-        return $medias;
+        $tagPage->medias = $medias;
+
+        return $tagPage;
+    }
+
+    /**
+     * @param string $tag
+     * @param int $count
+     * @param string $maxId
+     * @param string $minTimestamp
+     *
+     * @return Media[]
+     * @throws InstagramException
+     */
+    public function getMediasByTag($tag, $count = 12, $maxId = '', $minTimestamp = null)
+    {
+        return $this->getTagPage($tag, $count,$maxId, $minTimestamp )->medias;
     }
 
     /**
@@ -930,28 +954,9 @@ class Instagram
      * @throws InstagramException
      * @throws InstagramNotFoundException
      */
-    public function getCurrentTopMediasByTagName($tagName)
+    public function getCurrentTopMediasByTagName($tag)
     {
-        $response = Request::get(Endpoints::getMediasJsonByTagLink($tagName, ''),
-            $this->generateHeaders($this->userSession));
-
-        if ($response->code === static::HTTP_NOT_FOUND) {
-            throw new InstagramNotFoundException('Account with given username does not exist.', static::HTTP_NOT_FOUND);
-        }
-
-        if ($response->code !== static::HTTP_OK) {
-            throw new InstagramException('Response code is ' . $response->code . '. Body: ' . static::getErrorBody($response->body) . ' Something went wrong. Please report issue.', $response->code);
-        }
-
-        $cookies = static::parseCookies($response->headers['Set-Cookie']);
-        $this->userSession['csrftoken'] = $cookies['csrftoken'];
-        $jsonResponse = $this->decodeRawBodyToJson($response->raw_body);
-        $medias = [];
-        $nodes = (array)@$jsonResponse['graphql']['hashtag']['edge_hashtag_to_top_posts']['edges'];
-        foreach ($nodes as $mediaArray) {
-            $medias[] = Media::create($mediaArray['node']);
-        }
-        return $medias;
+        return $this->getTagPage($tag)->topMedias;
     }
 
     /**

@@ -130,6 +130,17 @@ class InstagramTest extends TestCase
         $this->assertEquals(30, count($medias));
     }
 
+    /**
+     * @group tagPage
+     * @throws \InstagramScraper\Exception\InstagramException
+     */
+    public function testGetTagPage(){
+        $instagram = new Instagram();
+        $tagPage = $instagram->getTagPage('bnw',30);
+        $this->assertGreaterThan(200000, $tagPage->count);
+        $this->assertInstanceOf(Media::class, array_pop($tagPage->medias));
+        $this->assertInstanceOf(Media::class, array_pop($tagPage->topMedias));
+    }
 
     protected function getHttpCode($url) {
         $handle = curl_init($url);
