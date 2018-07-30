@@ -1037,9 +1037,7 @@ class Instagram
     public function getLocationById($facebookLocationId)
     {
 
-//        $response = Request::get(Endpoints::getMediasJsonByLocationIdLink($facebookLocationId));
-        $response = Request::get(Endpoints::getMediasJsonByLocationIdLink($facebookLocationId),
-                    $this->generateHeaders($this->userSession));
+        $response = Request::get(Endpoints::getMediasJsonByLocationIdLink($facebookLocationId));
 
         if ($response->code === static::HTTP_NOT_FOUND) {
             throw new InstagramNotFoundException('Location with this id doesn\'t exist', static::HTTP_NOT_FOUND);
