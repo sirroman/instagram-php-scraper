@@ -119,6 +119,9 @@ class InstagramTest extends TestCase
     }
 
 
+    /**
+     * @group auth
+     */
     public function testGetLocationMediasById()
     {
         $i = $this->setUpInstagram();
@@ -136,7 +139,7 @@ class InstagramTest extends TestCase
         $location =$i->getLocationById(1032158659);
         $this->assertEquals('Публичная библиотека. Центр культурных программ', $location->getName());
 //        $this->assertEquals(200, $this->getHttpCode($location->getProfilePicUrl()));
-        $this->assertEquals(39.7263,$location->getLng());
+        $this->assertEquals(39.7263, $location->getLng());
         $this->assertEquals(47.22837, $location->getLat());
 //        print_r($location);
     }
