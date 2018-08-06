@@ -2,6 +2,7 @@
 
 namespace InstagramScraper;
 
+use InstagramAPI\Exception\CheckpointRequiredException;
 use InstagramScraper\Exception\InstagramAuthException;
 use InstagramScraper\Exception\InstagramException;
 use InstagramScraper\Exception\InstagramNotFoundException;
@@ -1277,18 +1278,32 @@ class Instagram
                 $csrfToken = $match[1];
             }
 
-            $cookies = static::parseCookies($response->headers['Set-Cookie']);
-            $mid = $cookies['mid'];
-            $headers = ['cookie' => "csrftoken=$csrfToken; mid=$mid;",
-                'referer' => Endpoints::BASE_URL . '/',
-                'x-csrftoken' => $csrfToken,
-            ];
+            if (isset($response->headers['Set-Cookie'])){
+                $cookies = static::parseCookies($response->headers['Set-Cookie']);
+                $mid = $cookies['mid'];
+                $headers = ['cookie' => "csrftoken=$csrfToken; mid=$mid;",
+                    'referer' => Endpoints::BASE_URL . '/',
+                    'x-csrftoken' => $csrfToken,
+                ];
+            }else{
+                $cookies=[];
+                $headers = ['cookie' => "csrftoken=$csrfToken;",
+                    'referer' => Endpoints::BASE_URL . '/',
+                    'x-csrftoken' => $csrfToken,
+                ];
+            }
+
             $response = Request::post(Endpoints::LOGIN_URL, $headers,
                 ['username' => $this->sessionUsername, 'password' => $this->sessionPassword]);
-
+//dump($response);
             if ($response->code !== static::HTTP_OK) {
-                if ($response->code === static::HTTP_BAD_REQUEST && isset($response->body->message) && $response->body->message == 'checkpoint_required' && $support_two_step_verification) {
-                    $response = $this->verifyTwoStep($response, $cookies);
+                if ($response->code === static::HTTP_BAD_REQUEST && isset($response->body->message) && $response->body->message == 'checkpoint_required' ) {
+                    if ( $support_two_step_verification){
+                        $response = $this->verifyTwoStep($response, $cookies);
+                    }else{
+                        throw new CheckpointRequiredException("checkpoint_required", 403);
+                    }
+
                 } elseif ((is_string($response->code) || is_numeric($response->code)) && is_string($response->body)) {
                     throw new InstagramAuthException('Response code is ' . $response->code . '. Body: ' . $response->body . ' Something went wrong. Please report issue.', $response->code);
                 } else {
@@ -1362,7 +1377,12 @@ class Instagram
             'x-csrftoken' => $cookies['csrftoken']
         ];
 
-        $url = Endpoints::BASE_URL . $response->body->checkpoint_url;
+        if (strpos($response->body->checkpoint_url, "http")===false){
+            $url = Endpoints::BASE_URL . $response->body->checkpoint_url;
+        }else{
+            $url = $response->body->checkpoint_url;
+        }
+
         $response = Request::get($url, $headers);
         if (preg_match('/window._sharedData\s\=\s(.*?)\;<\/script>/', $response->raw_body, $matches)) {
             $data = json_decode($matches[1], true, 512, JSON_BIGINT_AS_STRING);
