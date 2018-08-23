@@ -46,18 +46,18 @@ class InstagramTest extends TestCase
 
 
     /**
-     * @group getMediasByIserId
+     * @group getMediasByUserId
      * @group noAuth
      */
     public function testGetMediasByUserId()
     {
         $instagram = new Instagram();
-        $nonPrivateAccountMedias = $instagram->getMediasByUserId(3);
-        $this->assertEquals(12, count($nonPrivateAccountMedias));
-
-        $nonPrivateAccountMedias = $instagram->getMediasByUserId(3, 50);
-        $this->assertEquals(50, count($nonPrivateAccountMedias));
+        $nonPrivateAccountMedias = $instagram->getMediasByUserId(3, 13);
+        $this->assertEquals(13, count($nonPrivateAccountMedias));
     }
+
+
+
 
     /**
      * @group accountPage
@@ -80,6 +80,7 @@ class InstagramTest extends TestCase
      */
     public function testGetMediaPageByUrl()
     {
+        sleep(1);
         $instagram = new Instagram();
         $media = $instagram->getMediaByUrl('https://www.instagram.com/p/BHaRdodBouH');
 //        print_r($media);
@@ -127,6 +128,8 @@ class InstagramTest extends TestCase
      * @group noAuth
      */
     public function testNoAuthGetMediasByTag(){
+
+        sleep(1);
         $instagram = new Instagram();
         $medias = $instagram->getMediasByTag('bnw',30);
         $this->assertEquals(30, count($medias));
@@ -137,6 +140,7 @@ class InstagramTest extends TestCase
      * @throws \InstagramScraper\Exception\InstagramException
      */
     public function testGetTagPage(){
+        sleep(3);
         $instagram = new Instagram();
         $tagPage = $instagram->getTagPage('bnw',30);
         $this->assertGreaterThan(200000, $tagPage->count);
