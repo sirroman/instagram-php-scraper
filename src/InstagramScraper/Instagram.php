@@ -12,6 +12,7 @@ use InstagramScraper\Model\Comment;
 use InstagramScraper\Model\Like;
 use InstagramScraper\Model\Location;
 use InstagramScraper\Model\Media;
+use InstagramScraper\Model\Response\MediasResponse;
 use InstagramScraper\Model\Story;
 use InstagramScraper\Model\Tag;
 use InstagramScraper\Model\TagPage;
@@ -383,10 +384,10 @@ class Instagram
      * @return Media[]
      * @throws InstagramException
      */
-    public function getMediasByUserId($id, $count = 12, $maxId = '')
+    public function getMediasByUserId($id, $count = 12, $maxId = '') : MediasResponse
     {
         $index = 0;
-        $medias = [];
+        $mediasResponse = new MediasResponse();
         $isMoreAvailable = true;
         while ($index < $count && $isMoreAvailable) {
             $variables = json_encode([
@@ -410,22 +411,28 @@ class Instagram
             $nodes = $arr['data']['user']['edge_owner_to_timeline_media']['edges'];
             // fix - count takes longer/has more overhead
             if (!isset($nodes) || empty($nodes)) {
-                return [];
-            }
-            foreach ($nodes as $mediaArray) {
-                if ($index === $count) {
-                    return $medias;
-                }
-                $medias[] = Media::create($mediaArray['node']);
-                $index++;
-            }
-            if (empty($nodes) || !isset($nodes)) {
-                return $medias;
+                return $mediasResponse;
             }
             $maxId = $arr['data']['user']['edge_owner_to_timeline_media']['page_info']['end_cursor'];
             $isMoreAvailable = $arr['data']['user']['edge_owner_to_timeline_media']['page_info']['has_next_page'];
+
+            $mediasResponse->pageInfo->end_cursor = $maxId;
+            $mediasResponse->pageInfo->has_next_page = $isMoreAvailable;
+            $mediasResponse->count = $arr['data']['user']['edge_owner_to_timeline_media']['count'];
+
+            foreach ($nodes as $mediaArray) {
+                if ($index === $count) {
+                    return $mediasResponse;
+                }
+                $mediasResponse->medias[] = Media::create($mediaArray['node']);
+                $index++;
+            }
+            if (empty($nodes) || !isset($nodes)) {
+                return $mediasResponse;
+            }
         }
-        return $medias;
+
+        return $mediasResponse;
     }
 
     /**
@@ -1020,7 +1027,6 @@ class Instagram
             }
             $cookies = static::parseCookies($response->headers['Set-Cookie']);
             $this->userSession['csrftoken'] = $cookies['csrftoken'];
-
             $arr = $this->decodeRawBodyToJson($response->raw_body);
             $nodes = $arr['graphql']['location']['edge_location_to_media']['edges'];
 

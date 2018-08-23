@@ -52,8 +52,10 @@ class InstagramTest extends TestCase
     public function testGetMediasByUserId()
     {
         $instagram = new Instagram();
-        $nonPrivateAccountMedias = $instagram->getMediasByUserId(3, 13);
-        $this->assertEquals(13, count($nonPrivateAccountMedias));
+        $response = $instagram->getMediasByUserId(3, 13);
+        $this->assertEquals(13, count($response->medias));
+        $this->assertEquals(1, $response->pageInfo->has_next_page);
+        $this->assertGreaterThan(1600, $response->count);
     }
 
 
