@@ -1308,7 +1308,7 @@ class Instagram
 
             $response = Request::post(Endpoints::LOGIN_URL, $headers,
                 ['username' => $this->sessionUsername, 'password' => $this->sessionPassword]);
-//dump($response);
+//            print_r($response);
             if ($response->code !== static::HTTP_OK) {
                 if ($response->code === static::HTTP_BAD_REQUEST && isset($response->body->message) && $response->body->message == 'checkpoint_required' ) {
                     if ( $support_two_step_verification){
@@ -1326,6 +1326,16 @@ class Instagram
             }
 
             if (is_object($response->body)) {
+
+                if (!isset($response->body->authenticated)){
+                    if (isset($response->body->errors->error[0]) ){
+                        $message = $response->body->errors->error[0];
+                    }else{
+                        $message = 'Something went wrong. Please report issue.';
+                    }
+                    throw new InstagramAuthException($message);
+                }
+
                 if (!$response->body->authenticated) {
                     throw new InstagramAuthException('User credentials are wrong.');
                 }

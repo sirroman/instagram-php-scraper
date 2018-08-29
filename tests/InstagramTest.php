@@ -8,6 +8,10 @@ use phpFastCache\CacheManager;
 use PHPUnit\Framework\TestCase;
 
 
+/**
+ * Class InstagramTest
+ * @group auth
+ */
 class InstagramTest extends TestCase
 {
     private static $instagram;
@@ -23,6 +27,12 @@ class InstagramTest extends TestCase
     }
 
 
+    /**
+     * @throws \InstagramScraper\Exception\InstagramAuthException
+     * @throws \InstagramScraper\Exception\InstagramException
+     * @throws \phpFastCache\Exceptions\phpFastCacheDriverCheckException
+     * @return Instagram
+     */
     public static function setUpInstagram()
     {
 
@@ -119,16 +129,6 @@ class InstagramTest extends TestCase
     }
 
 
-    /**
-     * @group auth
-     */
-    public function testGetLocationMediasById()
-    {
-        $i = $this->setUpInstagram();
-        $medias = $i->getMediasByLocationId(1);
-        $this->assertEquals(12, count($medias));
-    }
-
     public function testGeMediaCommentsByCode()
     {
         $comments = self::$instagram->getMediaCommentsByCode('BR5Njq1gKmB', 40);
@@ -147,7 +147,14 @@ class InstagramTest extends TestCase
         $username = $i->getUsernameById(3);
         $this->assertEquals('kevin', $username);
     }
+
+    /**
+     * @group getMediaLikesByCode
+     */
+    public function testGetMediaLikesByCode(){
+        $i = $this->setUpInstagram();
+        $likes = $i->getMediaLikesByCode('BR5Njq1gKmB', 10);
+        print_r($likes);
+    }
     
-    // TODO: Add test getMediaById
-    // TODO: Add test getLocationById
 }
