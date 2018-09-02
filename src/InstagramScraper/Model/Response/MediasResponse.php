@@ -14,12 +14,12 @@ class MediasResponse
     /**
      * @var Media[]
      */
-    public $medias;
+    public $medias=[];
 
     /**
      * @var int
      */
-    public $count;
+    public $count=0;
 
     public function __construct()
     {

@@ -13,5 +13,5 @@ class PageInfo
     /**
      * @var integer
      */
-    public $has_next_page = true;
+    public $has_next_page = false;
 }
