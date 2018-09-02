@@ -685,7 +685,7 @@ class Media extends AbstractModel
     /**
      * @return Account
      */
-    public function getOwner()
+    public function getOwner() : Account
     {
         return $this->owner;
     }

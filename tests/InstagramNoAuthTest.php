@@ -90,6 +90,9 @@ class InstagramTest extends TestCase
         $this->assertGreaterThan(20, count($media->getComments()));
         // @TODO проверить позже может появятся лайки в будущем?
         //$this->assertEquals(10, count($media->getLikes()));
+        $this->assertNull($media->getOwner()->getMediaCount());
+        $this->assertNull($media->getOwner()->getFollowedByCount());
+        $this->assertNull($media->getOwner()->getFollowsCount());
     }
 
     /**
@@ -102,7 +105,7 @@ class InstagramTest extends TestCase
         $media = $instagram->getMediaByCode('Bgo1NmHFZaB');
         $this->assertEquals(Media::TYPE_SIDECAR, $media->getType());
         $this->assertEquals('beyonce', $media->getOwner()->getUsername());
-        $this->assertGreaterThan(15, count($media->getComments()));
+        $this->assertGreaterThan(5, count($media->getComments()));
         //$this->assertGreaterThan(5, count($media->getLikes()));
         $this->assertEquals(5, count($media->getSidecarMedias()));
 

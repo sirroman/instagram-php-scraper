@@ -54,19 +54,19 @@ class Account extends AbstractModel
      * Number of subscriptions
      * @var integer
      */
-    protected $followsCount = 0;
+    protected $followsCount;
 
     /**
      * Number of followers
      * @var integer
      */
-    protected $followedByCount = 0;
+    protected $followedByCount;
 
     /**
      * Number of medias published by user
      * @var integer
      */
-    protected $mediaCount = 0;
+    protected $mediaCount;
 
     /**
      * true if account is private
