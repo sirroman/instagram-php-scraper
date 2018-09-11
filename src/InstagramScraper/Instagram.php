@@ -838,7 +838,7 @@ class Instagram
                 $this->generateHeaders($this->userSession));
 
             if ($response->code !== static::HTTP_OK) {
-                throw new InstagramException('Response code is ' . $response->code . '. Body: ' . static::getErrorBody($response->body) . ' Something went wrong. Please report issue.', $response->code);
+                throw new InstagramException('Response code is ' . $response->code . '. Body: ' . ' Something went wrong. Please report issue.', $response->code);
             }
 
             $cookies = static::parseCookies($response->headers['Set-Cookie']);
