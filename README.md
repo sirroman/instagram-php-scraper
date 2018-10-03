@@ -2,6 +2,11 @@
 This library based on Instagram web version. We develop it because nowadays it is hard to get approved Instagram application. 
 The purpose support every feature that web desktop and mobile version support. 
 
+## Upstream
+```
+git pull upstream master
+```
+
 ## Code Example
 ```php
 $instagram = Instagram::withCredentials('username', 'password');
