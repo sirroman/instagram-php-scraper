@@ -7,7 +7,7 @@ use InstagramScraper\Exception\InstagramAuthException;
 use InstagramScraper\Exception\InstagramException;
 use InstagramScraper\Exception\InstagramNotFoundException;
 use InstagramScraper\Model\Account;
-use InstagramScraper\Model\AccountPage;
+use InstagramScraper\Model\Response\AccountResponse;
 use InstagramScraper\Model\Comment;
 use InstagramScraper\Model\Like;
 use InstagramScraper\Model\Location;
@@ -306,12 +306,12 @@ class Instagram
     /**
      * @param string $username
      *
-     * @return AccountPage
+     * @return AccountResponse
      * @throws InstagramException
      * @throws InstagramNotFoundException
      */
 
-    public function getAccountPage($username) :?AccountPage {
+    public function getAccountPage($username) :?AccountResponse {
 //    public function getAccount($username)
         $response = Request::get(Endpoints::getAccountPageLink($username), $this->generateHeaders($this->userSession));
 
@@ -328,7 +328,8 @@ class Instagram
             throw new InstagramNotFoundException('Account with this username does not exist', static::HTTP_NOT_FOUND);
         }
 
-        $accountPage = new AccountPage();
+
+        $accountPage = new AccountResponse();
         $accountPage->account = Account::create($userArray['entry_data']['ProfilePage'][0]['graphql']['user']);
 
         $nodes = $userArray['entry_data']['ProfilePage'][0]['graphql']['user']['edge_owner_to_timeline_media']['edges'];
@@ -339,6 +340,8 @@ class Instagram
             }
 
         }
+        $accountPage->pageInfo->end_cursor = $userArray['entry_data']['ProfilePage'][0]['graphql']['user']['edge_owner_to_timeline_media']['page_info']['end_cursor'];
+        $accountPage->pageInfo->has_next_page = $userArray['entry_data']['ProfilePage'][0]['graphql']['user']['edge_owner_to_timeline_media']['page_info']['has_next_page'];
 
         return $accountPage;
     }

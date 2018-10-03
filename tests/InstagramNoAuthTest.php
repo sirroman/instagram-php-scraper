@@ -76,7 +76,14 @@ class InstagramTest extends TestCase
         $instagram = new Instagram();
         $accountPage = $instagram->getAccountPage('kevin');
         $this->assertEquals(3,$accountPage->account->getId());
+
         $this->assertEquals(12, count($accountPage->medias));
+
+        $response = $instagram->getMediasByUserId($accountPage->account->getId(), 12, $accountPage->pageInfo->end_cursor);
+        $this->assertEquals(12, count($response->medias));
+        $this->assertEquals(1, $response->pageInfo->has_next_page);
+        $this->assertGreaterThan(1600, $response->count);
+
     }
 
 
