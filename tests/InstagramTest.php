@@ -43,7 +43,6 @@ class InstagramTest extends TestCase
         ]);
 
         $instanceCache = CacheManager::getInstance('files');
-
         self::$instagram = Instagram::withCredentials(self::$username, self::$password, $instanceCache);
         self::$instagram->login();
 //        return $instagram;
@@ -76,6 +75,7 @@ class InstagramTest extends TestCase
     {
         $i = $this->setUpInstagram();
         // PHP_INT_MAX is far larger than the greatest id so far and thus does not represent a valid account.
+
         $this->expectException(\InstagramScraper\Exception\InstagramNotFoundException::class);
         $i->getAccountById(PHP_INT_MAX);
     }
@@ -135,7 +135,7 @@ class InstagramTest extends TestCase
         //TODO: check why returns less comments
         $this->assertEquals(33, sizeof($comments));
     }
-    
+
     /**
      * @group getUsernameById
      * @group auth
