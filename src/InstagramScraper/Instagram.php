@@ -12,6 +12,7 @@ use InstagramScraper\Model\Comment;
 use InstagramScraper\Model\Like;
 use InstagramScraper\Model\Location;
 use InstagramScraper\Model\Media;
+use InstagramScraper\Model\Response\LocationResponse;
 use InstagramScraper\Model\Response\MediasResponse;
 use InstagramScraper\Model\Story;
 use InstagramScraper\Model\Tag;
@@ -1046,17 +1047,22 @@ class Instagram
      * @param int $quantity
      * @param string $offset
      *
-     * @return Media[]
+     * @return LocationResponse
      * @throws InstagramException
      */
-    public function getMediasByLocationId($facebookLocationId, $quantity = 12, $offset = '')
+    public function getLocationPage($facebookLocationId, $offset = '') : LocationResponse
     {
         $index = 0;
         $medias = [];
         $hasNext = true;
-        while ($index < $quantity && $hasNext) {
-            $response = Request::get(Endpoints::getMediasJsonByLocationIdLink($facebookLocationId, $offset),
-                $this->generateHeaders($this->userSession));
+        $result = new LocationResponse();
+
+            //$response = Request::get(Endpoints::getMediasJsonByLocationIdLink($facebookLocationId, $offset),$this->generateHeaders($this->userSession));
+            $response = Request::get(Endpoints::getMediasJsonByLocationIdLink($facebookLocationId, $offset));
+
+            if ($response->code === static::HTTP_NOT_FOUND) {
+                throw new InstagramNotFoundException('Location with this id doesn\'t exist', static::HTTP_NOT_FOUND);
+            }
 
             if ($response->code !== static::HTTP_OK) {
                 throw new InstagramException('Response code is ' . $response->code . '. Body: ' . static::getErrorBody($response->body) . ' Something went wrong. Please report issue.', $response->code);
@@ -1065,22 +1071,21 @@ class Instagram
             $this->userSession['csrftoken'] = $cookies['csrftoken'];
             $arr = $this->decodeRawBodyToJson($response->raw_body);
 //            print_r($arr);
-            $nodes = $arr['graphql']['location']['edge_location_to_media']['edges'];
 
+            $result->location = Location::create($arr['graphql']['location']);
+
+            $nodes = $arr['graphql']['location']['edge_location_to_top_posts']['edges'];
             foreach ($nodes as $mediaArray) {
-                if ($index === $quantity) {
-                    return $medias;
-                }
-                $medias[] = Media::create($mediaArray['node']);
-                $index++;
+                $result->topMedias[] = Media::create($mediaArray['node']);
             }
-            if (empty($nodes)) {
-                return $medias;
+
+            $nodes = $arr['graphql']['location']['edge_location_to_media']['edges'];
+            foreach ($nodes as $mediaArray) {
+                $result->medias[] = Media::create($mediaArray['node']);
             }
-            $hasNext = $arr['graphql']['location']['edge_location_to_media']['page_info']['has_next_page'];
-            $offset =  $arr['graphql']['location']['edge_location_to_media']['page_info']['end_cursor'];
-        }
-        return $medias;
+
+
+        return $result;
     }
 
     /**

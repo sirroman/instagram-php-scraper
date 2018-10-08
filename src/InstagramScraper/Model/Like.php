@@ -16,6 +16,21 @@ class Like extends AbstractModel
     protected $username;
 
     /**
+     * @var string
+     */
+    protected $full_name;
+
+    /**
+     * @var string
+     */
+    protected $profile_pic_url;
+
+    /**
+     * @var bool
+     */
+    protected $is_verified;
+
+    /**
      * @return mixed
      */
     public function getId()
@@ -43,6 +58,17 @@ class Like extends AbstractModel
                 break;
             case 'username':
                 $this->username = $value;
+                break;
+            case 'full_name':
+                $this->full_name = $value;
+                break;
+
+            case 'profile_pic_url':
+                $this->profile_pic_url = $value;
+                break;
+
+            case 'is_verified':
+                $this->is_verified = $value;
                 break;
         }
     }
