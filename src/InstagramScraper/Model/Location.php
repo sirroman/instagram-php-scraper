@@ -18,7 +18,11 @@ class Location extends AbstractModel
         'modified' => 'modified',
         'profile_pic_url' => 'profilePicUrl',
         'edge_location_to_media' => 'initLocationMedias',
-        'directory' => 'initDirectory'
+        'directory' => 'initDirectory',
+        'phone' => 'phone',
+        'website' => 'website',
+        'blurb' => 'blurb',
+        'address_json' => 'initAddress'
     ];
     /**
      * @var
@@ -69,6 +73,27 @@ class Location extends AbstractModel
 
     protected $cityId;
     protected $cityName;
+
+    /**
+     * @var string
+     */
+    protected $blurb;
+
+    /**
+     * @var string
+     */
+    protected $website;
+
+    /**
+     * @var string
+     */
+    protected $phone;
+
+
+    /**
+     * @var array
+     */
+    protected $address=[];
 
     /**
      * @return mixed
@@ -169,6 +194,22 @@ class Location extends AbstractModel
         return $this->cityName;
     }
 
+    public function getBlurb(){
+        return $this->blurb;
+    }
+
+    public function getWebsite(){
+        return $this->website;
+    }
+
+    public function getPhone(){
+        return $this->phone;
+    }
+
+    public function getAddress(){
+        return $this->address;
+    }
+
     protected function initLocationMedias($value, $prop, $props)
     {
 
@@ -181,5 +222,9 @@ class Location extends AbstractModel
             $this->countryName  = $value['country']['name'];
             $this->cityId       = $value['city']['id'];
             $this->cityName     = $value['city']['name'];
+    }
+
+    protected function initAddress($value, $prop, $props){
+        $this->address = json_decode($value);
     }
 }
