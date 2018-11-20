@@ -31,7 +31,7 @@ class InstagramTest extends TestCase
 
 
     /**
-     * @group getMediasByLocationId
+     * @group getLocationPage
      * @group noAuth
      */
     public function testGetMediasByLocationId()
@@ -39,9 +39,27 @@ class InstagramTest extends TestCase
 
         $i = new Instagram();
 
-        $medias =$i->getMediasByLocationId(1032158659);
-        $this->assertEquals(12, count($medias));
-        $this->assertGreaterThan(1000000000, $medias[0]->getId());
+        $r =$i->getLocationPage(1032158659);
+        $this->assertEquals(1032158659, $r->location->getId());
+        $this->assertEquals('Публичная библиотека. Центр культурных программ', $r->location->getName());
+        $this->assertEquals(47.22837, $r->location->getLat());
+        $this->assertEquals(39.7263, $r->location->getLng());
+        $this->assertEquals('Донская государственная публичная библиотека - один из крупных культурных центров г. Ростова-на-Дону. ', $r->location->getBlurb());
+        $this->assertEquals('http://www.dspl.ru/', $r->location->getWebsite());
+        $this->assertEquals('8(863)2640600', $r->location->getPhone());
+        $address = json_decode('{"street_address": "\u0420\u043e\u0441\u0442\u043e\u0432-\u043d\u0430-\u0414\u043e\u043d\u0443, \u041f\u0443\u0448\u043a\u0438\u043d\u0441\u043a\u0430\u044f, 175 \u0410", "zip_code": "344000", "city_name": "Rostovnadonu, Rostovskaya Oblast\', Russia", "region_name": "", "country_code": "RU"}');
+        $this->assertEquals($address, $r->location->getAddress());
+        $this->assertEquals('https://scontent-frt3-2.cdninstagram.com/vp/70f92aa1e46822db064d3434dc4f0922/5C3D1556/t51.2885-15/e35/c0.32.911.911/s150x150/42078547_294834521244918_6897421412395384832_n.jpg', $r->location->getProfilePicUrl());
+
+        $this->assertGreaterThan(26260, $r->location->getMediaCount());
+        $this->assertGreaterThan(10, count($r->medias));
+        $this->assertGreaterThan(5, count($r->topMedias));
+        $this->assertInstanceOf(Media::class, $r->medias[0]);
+        $this->assertInstanceOf(Media::class, $r->topMedias[0]);
+
+        $r =$i->getLocationPage(1032158659, $r->medias[count($r->medias)-1]->getId());
+        $this->assertGreaterThan(10, count($r->medias));
+
     }
 
 
