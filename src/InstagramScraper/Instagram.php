@@ -6,6 +6,7 @@ use InstagramAPI\Exception\CheckpointRequiredException;
 use InstagramScraper\Exception\InstagramAuthException;
 use InstagramScraper\Exception\InstagramException;
 use InstagramScraper\Exception\InstagramNotFoundException;
+use InstagramScraper\Exception\InstagramRateLimitException;
 use InstagramScraper\Model\Account;
 use InstagramScraper\Model\Response\AccountResponse;
 use InstagramScraper\Model\Comment;
@@ -30,6 +31,7 @@ class Instagram
     const HTTP_OK = 200;
     const HTTP_FORBIDDEN = 403;
     const HTTP_BAD_REQUEST = 400;
+    const HTTP_RATE_LIMIT = 429;
 
     const MAX_COMMENTS_PER_REQUEST = 300;
     const MAX_LIKES_PER_REQUEST = 300;
@@ -91,6 +93,10 @@ class Instagram
 
         if (static::HTTP_NOT_FOUND === $response->code) {
             throw new InstagramNotFoundException('Account with given username does not exist.',static::HTTP_NOT_FOUND);
+        }
+
+        if (static::HTTP_RATE_LIMIT === $response->code) {
+            throw new InstagramRateLimitException('Rate limit exception',static::HTTP_RATE_LIMIT);
         }
 
         if (static::HTTP_OK !== $response->code) {
@@ -197,6 +203,7 @@ class Instagram
      * @return Account[]
      * @throws InstagramException
      * @throws InstagramNotFoundException
+     * @throws InstagramRateLimitException
      */
     public function searchAccountsByUsername($username)
     {
@@ -205,6 +212,11 @@ class Instagram
         if (static::HTTP_NOT_FOUND === $response->code) {
             throw new InstagramNotFoundException('Account with given username does not exist.', static::HTTP_NOT_FOUND);
         }
+
+        if (static::HTTP_RATE_LIMIT === $response->code) {
+            throw new InstagramRateLimitException('Rate limit exception',static::HTTP_RATE_LIMIT);
+        }
+
         if (static::HTTP_OK !== $response->code) {
             throw new InstagramException('Response code is ' . $response->code . '. Body: ' . static::getErrorBody($response->body) . ' Something went wrong. Please report issue.', $response->code);
         }
@@ -305,6 +317,7 @@ class Instagram
      * @return Media[]
      * @throws InstagramException
      * @throws InstagramNotFoundException
+     * @throws InstagramRateLimitException
      */
     public function getMedias($username, $count = 20, $maxId = '')
     {
@@ -319,6 +332,7 @@ class Instagram
      * @return AccountResponse
      * @throws InstagramException
      * @throws InstagramNotFoundException
+     * @throws InstagramRateLimitException
      */
 
     public function getAccountPage($username) :?AccountResponse {
@@ -327,6 +341,9 @@ class Instagram
 
         if (static::HTTP_NOT_FOUND === $response->code) {
             throw new InstagramNotFoundException('Account with given username does not exist.', 404);
+        }
+        if (static::HTTP_RATE_LIMIT === $response->code) {
+            throw new InstagramRateLimitException('Rate limit exception',static::HTTP_RATE_LIMIT);
         }
         if (static::HTTP_OK !== $response->code) {
             throw new InstagramException('Response code is ' . $response->code . '. Body: ' . static::getErrorBody($response->body) . ' Something went wrong. Please report issue.', $response->code);
@@ -362,6 +379,7 @@ class Instagram
      * @return Account
      * @throws InstagramException
      * @throws InstagramNotFoundException
+     * @throws InstagramRateLimitException
      */
     public function getAccount($username) :?Account
     {
@@ -385,6 +403,7 @@ class Instagram
      *
      * @return MediasResponse
      * @throws InstagramException
+     * @throws InstagramRateLimitException
      */
     public function getMediasByUserId($id, $count = 12, $maxId = '') : MediasResponse
     {
@@ -399,7 +418,9 @@ class Instagram
             ]);
 
             $response = Request::get(Endpoints::getAccountMediasJsonLink($variables), $this->generateHeaders($this->userSession, $this->generateGisToken($variables)));
-
+            if (static::HTTP_RATE_LIMIT === $response->code) {
+                throw new InstagramRateLimitException('Rate limit exception',static::HTTP_RATE_LIMIT);
+            }
             if (static::HTTP_OK !== $response->code) {
                 throw new InstagramException('Response code is ' . $response->code . '. Body: ' . static::getErrorBody($response->body) . ' Something went wrong. Please report issue.', $response->code);
             }
@@ -470,6 +491,7 @@ class Instagram
      * @return mixed|null
      * @throws InstagramException
      * @throws InstagramNotFoundException
+     * @throws InstagramRateLimitException
      */
     private function getSharedDataFromPage($url = Endpoints::BASE_URL)
     {
@@ -477,7 +499,9 @@ class Instagram
         if (static::HTTP_NOT_FOUND === $response->code) {
             throw new InstagramNotFoundException("Page {$url} not found");
         }
-
+        if (static::HTTP_RATE_LIMIT === $response->code) {
+            throw new InstagramRateLimitException('Rate limit exception',static::HTTP_RATE_LIMIT);
+        }
         if (static::HTTP_OK !== $response->code) {
             throw new InstagramException('Response code is ' . $response->code . '. Body: ' . static::getErrorBody($response->body) . ' Something went wrong. Please report issue.', $response->code);
         }
@@ -491,6 +515,7 @@ class Instagram
      * @return Media[]
      * @throws InstagramException
      * @throws InstagramNotFoundException
+     * @throws InstagramRateLimitException
      */
     public function getMediasFromFeed($username, $count = 20)
     {
@@ -500,6 +525,9 @@ class Instagram
 
         if (static::HTTP_NOT_FOUND === $response->code) {
             throw new InstagramNotFoundException('Account with given username does not exist.');
+        }
+        if (static::HTTP_RATE_LIMIT === $response->code) {
+            throw new InstagramRateLimitException('Rate limit exception',static::HTTP_RATE_LIMIT);
         }
         if (static::HTTP_OK !== $response->code) {
             throw new InstagramException('Response code is ' . $response->code . '. Body: ' . static::getErrorBody($response->body) . ' Something went wrong. Please report issue.', $response->code);
@@ -547,6 +575,7 @@ class Instagram
      * @return Media
      * @throws InstagramException
      * @throws InstagramNotFoundException
+     * @throws InstagramRateLimitException
      */
     public function getMediaByUrl($mediaUrl)
     {
@@ -558,7 +587,9 @@ class Instagram
         if (static::HTTP_NOT_FOUND === $response->code) {
             throw new InstagramNotFoundException('Media with given code does not exist or account is private.', static::HTTP_NOT_FOUND);
         }
-
+        if (static::HTTP_RATE_LIMIT === $response->code) {
+            throw new InstagramRateLimitException('Rate limit exception',static::HTTP_RATE_LIMIT);
+        }
         if (static::HTTP_OK !== $response->code) {
             throw new InstagramException('Response code is ' . $response->code . '. Body: ' . static::getErrorBody($response->body) . ' Something went wrong. Please report issue.', $response->code);
 
@@ -577,6 +608,7 @@ class Instagram
      * @return Media
      * @throws InstagramException
      * @throws InstagramNotFoundException
+     * @throws InstagramRateLimitException
      */
 
     public function getMediaByCode($mediaCode)
@@ -593,6 +625,7 @@ class Instagram
      * @return array
      * @throws InstagramException
      * @throws InstagramNotFoundException
+     * @throws InstagramRateLimitException
      */
     public function getPaginateMedias($username, $maxId = '')
     {
@@ -616,7 +649,9 @@ class Instagram
             Endpoints::getAccountMediasJsonLink($variables),
             $this->generateHeaders($this->userSession, $this->generateGisToken($variables))
         );
-
+        if (static::HTTP_RATE_LIMIT === $response->code) {
+            throw new InstagramRateLimitException('Rate limit exception',static::HTTP_RATE_LIMIT);
+        }
         if (static::HTTP_OK !== $response->code) {
             throw new InstagramException('Response code is ' . $response->code . '. Body: ' . static::getErrorBody($response->body) . ' Something went wrong. Please report issue.', $response->code);
         }
@@ -659,6 +694,7 @@ class Instagram
      *
      * @return Comment[]
      * @throws InstagramException
+     * @throws InstagramRateLimitException
      */
     public function getMediaCommentsById($mediaId, $count = 10, $maxId = null)
     {
@@ -673,6 +709,7 @@ class Instagram
      *
      * @return Comment[]
      * @throws InstagramException
+     * @throws InstagramRateLimitException
      */
     public function getMediaCommentsByCode($code, $count = 10, $maxId = null)
     {
@@ -698,7 +735,9 @@ class Instagram
             $commentsUrl = Endpoints::getCommentsBeforeCommentIdByCode($variables);
             $response = Request::get($commentsUrl, $this->generateHeaders($this->userSession, $this->generateGisToken($variables)));
             // use a raw constant in the code is not a good idea!!
-            //if ($response->code !== 200) {
+            if (static::HTTP_RATE_LIMIT === $response->code) {
+                throw new InstagramRateLimitException('Rate limit exception',static::HTTP_RATE_LIMIT);
+            }
             if (static::HTTP_OK !== $response->code) {
                 throw new InstagramException('Response code is ' . $response->code . '. Body: ' . static::getErrorBody($response->body) . ' Something went wrong. Please report issue.', $response->code);
             }
@@ -767,6 +806,7 @@ class Instagram
      *
      * @return array
      * @throws InstagramException
+     * @throws InstagramRateLimitException
      */
     public function getMediaLikesByCode($code, $count = 10, $maxId = null)
     {
@@ -791,7 +831,9 @@ class Instagram
             $commentsUrl = Endpoints::getLastLikesByCode($code, $numberOfLikesToRetreive, $maxId);
             $response = Request::get($commentsUrl, $this->generateHeaders($this->userSession));
 
-
+            if (static::HTTP_RATE_LIMIT === $response->code) {
+                throw new InstagramRateLimitException('Rate limit exception',static::HTTP_RATE_LIMIT);
+            }
             if ($response->code !== static::HTTP_OK) {
                 throw new InstagramException('Response code is ' . $response->code . '. Body: ' . ' Something went wrong. Please report issue.', $response->code);
             }
@@ -827,6 +869,7 @@ class Instagram
      * @throws InstagramException
      * @throws InvalidArgumentException
      * @throws InstagramNotFoundException
+     * @throws InstagramRateLimitException
      */
     public function getAccountById($id)
     {
@@ -839,6 +882,7 @@ class Instagram
      * @return string
      * @throws InstagramException
      * @throws InstagramNotFoundException
+     * @throws InstagramRateLimitException
      */
     public function getUsernameById($id)
     {
@@ -847,7 +891,9 @@ class Instagram
         if (static::HTTP_NOT_FOUND === $response->code) {
             throw new InstagramNotFoundException('Failed to fetch account with given id');
         }
-
+        if (static::HTTP_RATE_LIMIT === $response->code) {
+            throw new InstagramRateLimitException('Rate limit exception',static::HTTP_RATE_LIMIT);
+        }
         if (static::HTTP_OK !== $response->code) {
             throw new InstagramException('Response code is ' . $response->code . '. Body: ' . static::getErrorBody($response->body) . ' Something went wrong. Please report issue.', $response->code);
         }
@@ -871,6 +917,7 @@ class Instagram
      *
      * @return TagPage
      * @throws InstagramException
+     * @throws InstagramRateLimitException
      */
     public function getTagPage($tag, $count = 12, $maxId = '', $minTimestamp = null)
     {
@@ -882,7 +929,9 @@ class Instagram
         while ($index < $count && $hasNextPage) {
             $response = Request::get(Endpoints::getMediasJsonByTagLink($tag, $maxId),
                 $this->generateHeaders($this->userSession));
-
+            if (static::HTTP_RATE_LIMIT === $response->code) {
+                throw new InstagramRateLimitException('Rate limit exception',static::HTTP_RATE_LIMIT);
+            }
             if ($response->code !== static::HTTP_OK) {
                 throw new InstagramException('Response code is ' . $response->code . '. Body: ' . ' Something went wrong. Please report issue.', $response->code);
             }
@@ -940,6 +989,7 @@ class Instagram
      *
      * @return Media[]
      * @throws InstagramException
+     * @throws InstagramRateLimitException
      */
     public function getMediasByTag($tag, $count = 12, $maxId = '', $minTimestamp = null)
     {
@@ -952,6 +1002,7 @@ class Instagram
      *
      * @return array
      * @throws InstagramException
+     * @throws InstagramRateLimitException
      */
     public function getPaginateMediasByTag($tag, $maxId = '')
     {
@@ -966,7 +1017,9 @@ class Instagram
 
         $response = Request::get(Endpoints::getMediasJsonByTagLink($tag, $maxId),
             $this->generateHeaders($this->userSession));
-
+        if (static::HTTP_RATE_LIMIT === $response->code) {
+            throw new InstagramRateLimitException('Rate limit exception',static::HTTP_RATE_LIMIT);
+        }
         if ($response->code !== static::HTTP_OK) {
             throw new InstagramException('Response code is ' . $response->code . '. Body: ' . static::getErrorBody($response->body) . ' Something went wrong. Please report issue.', $response->code);
         }
@@ -1014,6 +1067,7 @@ class Instagram
      * @return Media[]
      * @throws InstagramException
      * @throws InstagramNotFoundException
+     * @throws InstagramRateLimitException
      */
     public function getCurrentTopMediasByTagName($tag)
     {
@@ -1026,6 +1080,7 @@ class Instagram
      * @return Media[]
      * @throws InstagramException
      * @throws InstagramNotFoundException
+     * @throws InstagramRateLimitException
      */
     public function getCurrentTopMediasByLocationId($facebookLocationId)
     {
@@ -1035,7 +1090,9 @@ class Instagram
         if ($response->code === static::HTTP_NOT_FOUND) {
             throw new InstagramNotFoundException('Location with this id doesn\'t exist', static::HTTP_NOT_FOUND);
         }
-
+        if (static::HTTP_RATE_LIMIT === $response->code) {
+            throw new InstagramRateLimitException('Rate limit exception',static::HTTP_RATE_LIMIT);
+        }
         if ($response->code !== static::HTTP_OK) {
             throw new InstagramException('Response code is ' . $response->code . '. Body: ' . static::getErrorBody($response->body) . ' Something went wrong. Please report issue.', $response->code);
         }
@@ -1058,6 +1115,7 @@ class Instagram
      *
      * @return LocationResponse
      * @throws InstagramException
+     * @throws InstagramRateLimitException
      */
     public function getLocationPage($facebookLocationId, $offset = '') : LocationResponse
     {
@@ -1072,7 +1130,9 @@ class Instagram
             if ($response->code === static::HTTP_NOT_FOUND) {
                 throw new InstagramNotFoundException('Location with this id doesn\'t exist', static::HTTP_NOT_FOUND);
             }
-
+            if (static::HTTP_RATE_LIMIT === $response->code) {
+                throw new InstagramRateLimitException('Rate limit exception',static::HTTP_RATE_LIMIT);
+            }
             if ($response->code !== static::HTTP_OK) {
                 throw new InstagramException('Response code is ' . $response->code . '. Body: ' . static::getErrorBody($response->body) . ' Something went wrong. Please report issue.', $response->code);
             }
@@ -1103,6 +1163,7 @@ class Instagram
      * @return Location
      * @throws InstagramException
      * @throws InstagramNotFoundException
+     * @throws InstagramRateLimitException
      */
     public function getLocationById($facebookLocationId)
     {
@@ -1111,6 +1172,9 @@ class Instagram
 
         if ($response->code === static::HTTP_NOT_FOUND) {
             throw new InstagramNotFoundException('Location with this id doesn\'t exist', static::HTTP_NOT_FOUND);
+        }
+        if (static::HTTP_RATE_LIMIT === $response->code) {
+            throw new InstagramRateLimitException('Rate limit exception',static::HTTP_RATE_LIMIT);
         }
         if ($response->code !== static::HTTP_OK) {
             throw new InstagramException('Response code is ' . $response->code . '. Body: ' . static::getErrorBody($response->body) . ' Something went wrong. Please report issue.', $response->code);
@@ -1133,6 +1197,7 @@ class Instagram
      *
      * @return array
      * @throws InstagramException
+     * @throws InstagramRateLimitException
      */
     public function getFollowers($accountId, $count = 20, $pageSize = 20, $delayed = true)
     {
@@ -1151,7 +1216,9 @@ class Instagram
         while (true) {
             $response = Request::get(Endpoints::getFollowersJsonLink($accountId, $pageSize, $endCursor),
                 $this->generateHeaders($this->userSession));
-
+            if (static::HTTP_RATE_LIMIT === $response->code) {
+                throw new InstagramRateLimitException('Rate limit exception',static::HTTP_RATE_LIMIT);
+            }
             if ($response->code !== static::HTTP_OK) {
                 throw new InstagramException('Response code is ' . $response->code . '. Body: ' . static::getErrorBody($response->body) . ' Something went wrong. Please report issue.', $response->code);
             }

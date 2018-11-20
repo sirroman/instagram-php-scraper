@@ -13,6 +13,7 @@ use PHPUnit\Framework\TestCase;
  */
 class InstagramTest extends TestCase
 {
+    const SLEEP =2;
 
     /**
      * @group getLocationById
@@ -20,6 +21,7 @@ class InstagramTest extends TestCase
      */
     public function testGetLocationById()
     {
+        sleep(self::SLEEP);
         $i = new Instagram();
         $location =$i->getLocationById(1032158659);
         $this->assertEquals('Публичная библиотека. Центр культурных программ', $location->getName());
@@ -111,7 +113,7 @@ class InstagramTest extends TestCase
      */
     public function testGetMediaPageByUrl()
     {
-        sleep(1);
+        sleep(self::SLEEP);
         $instagram = new Instagram();
         $media = $instagram->getMediaByUrl('https://www.instagram.com/p/BHaRdodBouH');
 //        print_r($media);
@@ -130,6 +132,7 @@ class InstagramTest extends TestCase
      */
     public function testGetMediaPageByUrlSlidecar()
     {
+        sleep(self::SLEEP);
         $instagram = new Instagram();
         $media = $instagram->getMediaByCode('Bgo1NmHFZaB');
         $this->assertEquals(Media::TYPE_SIDECAR, $media->getType());
@@ -146,6 +149,7 @@ class InstagramTest extends TestCase
      */
     public function testGetMediaPageByUrlVideo()
     {
+        sleep(self::SLEEP);
         $instagram = new Instagram();
         $media = $instagram->getMediaById(1733446317571985644);
         $this->assertEquals(Media::TYPE_VIDEO, $media->getType());
@@ -163,7 +167,7 @@ class InstagramTest extends TestCase
      */
     public function testNoAuthGetMediasByTag(){
 
-        sleep(1);
+        sleep(self::SLEEP);
         $instagram = new Instagram();
         $medias = $instagram->getMediasByTag('bnw',30);
         $this->assertEquals(30, count($medias));
@@ -171,10 +175,9 @@ class InstagramTest extends TestCase
 
     /**
      * @group tagPage
-     * @throws \InstagramScraper\Exception\InstagramException
      */
     public function testGetTagPage(){
-        sleep(3);
+        sleep(self::SLEEP);
         $instagram = new Instagram();
         $tagPage = $instagram->getTagPage('bnw',30);
         $this->assertGreaterThan(200000, $tagPage->count);
