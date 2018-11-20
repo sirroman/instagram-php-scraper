@@ -373,7 +373,7 @@ class Instagram
      * @param int $count
      * @param string $maxId
      *
-     * @return Media[]
+     * @return MediasResponse
      * @throws InstagramException
      */
     public function getMediasByUserId($id, $count = 12, $maxId = '') : MediasResponse
