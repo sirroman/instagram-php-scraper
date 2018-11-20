@@ -146,7 +146,12 @@ class Instagram
     {
         Endpoints::setAccountMediasRequestCount($count);
     }
-
+	/**
+	 * Set custom curl opts
+	 */
+	public static function curlOpts($opts) {
+		Request::curlOpts($opts);
+	}
     /**
      * @param array $config
      */
@@ -234,11 +239,15 @@ class Instagram
             foreach ($session as $key => $value) {
                 $cookies .= "$key=$value; ";
             }
+             
+            $csrf = empty($session['csrftoken']) ? $session['x-csrftoken'] : $session['csrftoken'];
+            
             $headers = [
                 'cookie' => $cookies,
                 'referer' => Endpoints::BASE_URL . '/',
-                'x-csrftoken' => $session['csrftoken'],
+                'x-csrftoken' => $csrf,
             ];
+
         }
 
         if ($this->getUserAgent()) {
@@ -1332,13 +1341,22 @@ class Instagram
                 $csrfToken = $match[1];
             }
 
-            if (isset($response->headers['Set-Cookie'])){
-                $cookies = static::parseCookies($response->headers['Set-Cookie']);
+
+            if (isset($response->headers['Set-Cookie']) || isset($response->headers['set-cookie'])) {
+                if(isset($response->headers['Set-Cookie'])):
+                    $cookies        = static::parseCookies( $response->headers['Set-Cookie'] );
+                else:
+                    $cookies        = static::parseCookies( $response->headers['set-cookie'] );
+                endif;
                 $mid = $cookies['mid'];
-                $headers = ['cookie' => "csrftoken=$csrfToken; mid=$mid;",
+                $headers = [
+                    'cookie' => "csrftoken=$csrfToken; mid=$mid;",
                     'referer' => Endpoints::BASE_URL . '/',
                     'x-csrftoken' => $csrfToken,
+                    'X-CSRFToken' => $csrfToken,
+                    'user-agent' => $this->getUserAgent(),
                 ];
+
             }else{
                 $cookies=[];
                 $headers = ['cookie' => "csrftoken=$csrfToken;",
@@ -1382,7 +1400,11 @@ class Instagram
                 }
             }
 
-            $cookies = static::parseCookies($response->headers['Set-Cookie']);
+            if(isset($response->headers['Set-Cookie'])):
+				$cookies        = static::parseCookies( $response->headers['Set-Cookie'] );
+			else:
+				$cookies        = static::parseCookies( $response->headers['set-cookie'] );
+			endif;
             $cookies['mid'] = $mid;
             $cachedString->set($cookies);
             static::$instanceCache->save($cachedString);
@@ -1406,9 +1428,12 @@ class Instagram
         }
         $sessionId = $session['sessionid'];
         $csrfToken = $session['csrftoken'];
-        $headers = ['cookie' => "csrftoken=$csrfToken; sessionid=$sessionId;",
+        $headers = [
+            'cookie' => "csrftoken=$csrfToken; sessionid=$sessionId;",
             'referer' => Endpoints::BASE_URL . '/',
             'x-csrftoken' => $csrfToken,
+            'X-CSRFToken' => $csrfToken,
+            'user-agent' => $this->getUserAgent(),
         ];
         $response = Request::get(Endpoints::BASE_URL, $headers);
         if ($response->code !== static::HTTP_OK) {
@@ -1438,7 +1463,8 @@ class Instagram
         $headers = [
             'cookie' => $cookie_string,
             'referer' => Endpoints::LOGIN_URL,
-            'x-csrftoken' => $cookies['csrftoken']
+            'x-csrftoken' => $cookies['csrftoken'],
+            'user-agent' => $this->getUserAgent(),
         ];
 
         if (strpos($response->body->checkpoint_url, "http")===false){
