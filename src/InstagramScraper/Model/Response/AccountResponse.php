@@ -2,6 +2,9 @@
 
 namespace InstagramScraper\Model\Response;
 
+use InstagramScraper\Model\Account;
+use InstagramScraper\Model\Media;
+
 /**
  * Class AccountResponse
  * @package InstagramScraper\Model

@@ -6,3 +6,5 @@ composer.lock
 phpunit.phar
 tests/sessions
 tests/InstagramAuth.php
+phpunit.xml
+

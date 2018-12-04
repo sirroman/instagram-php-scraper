@@ -1,7 +1,5 @@
 <?php
 
-require '../vendor/autoload.php';
-
 use InstagramScraper\Instagram;
 use InstagramScraper\Model\Media;
 use phpFastCache\CacheManager;
@@ -14,6 +12,9 @@ use PHPUnit\Framework\TestCase;
  */
 class InstagramTest extends TestCase
 {
+    /**
+     * @var Instagram
+     */
     private static $instagram;
 
     private static $username;
@@ -43,6 +44,7 @@ class InstagramTest extends TestCase
         ]);
 
         $instanceCache = CacheManager::getInstance('files');
+
         self::$instagram = Instagram::withCredentials(self::$username, self::$password, $instanceCache);
         self::$instagram->login();
 //        return $instagram;
@@ -128,12 +130,46 @@ class InstagramTest extends TestCase
         $this->assertGreaterThan(9, count($medias));
     }
 
+    public function testGetLocationMediasById()
+    {
+        $medias = self::$instagram->getMediasByLocationId(1, 56);
+        $this->assertEquals(56, count($medias));
+    }
+
+    public function testGetLocationById()
+    {
+        $location = self::$instagram->getLocationById(1);
+        $this->assertEquals('Dog Patch Labs', $location->getName());
+    }
+
+    public function testGetMediaByTag()
+    {
+        $medias = self::$instagram->getMediasByTag('hello');
+        echo json_encode($medias);
+    }
+
+    public function testGetIdFromCode()
+    {
+        $code = Media::getCodeFromId('1270593720437182847');
+        $this->assertEquals('BGiDkHAgBF_', $code);
+        $code = Media::getCodeFromId('1270593720437182847_3');
+        $this->assertEquals('BGiDkHAgBF_', $code);
+        $code = Media::getCodeFromId(1270593720437182847);
+        $this->assertEquals('BGiDkHAgBF_', $code);
+    }
+
+    public function testGetCodeFromId()
+    {
+        $id = Media::getIdFromCode('BGiDkHAgBF_');
+        $this->assertEquals(1270593720437182847, $id);
+    }
+
 
     public function testGeMediaCommentsByCode()
     {
         $comments = self::$instagram->getMediaCommentsByCode('BR5Njq1gKmB', 40);
         //TODO: check why returns less comments
-        $this->assertEquals(33, sizeof($comments));
+        $this->assertLessThanOrEqual(40, sizeof($comments));
     }
 
     /**
@@ -151,10 +187,50 @@ class InstagramTest extends TestCase
     /**
      * @group getMediaLikesByCode
      */
+
     public function testGetMediaLikesByCode(){
         $i = $this->setUpInstagram();
         $likes = $i->getMediaLikesByCode('BR5Njq1gKmB', 10);
         print_r($likes);
     }
     
+
+    public function testGetMediasByUserId()
+    {
+        $instagram = new Instagram();
+        $nonPrivateAccountMedias = $instagram->getMediasByUserId(3);
+        $this->assertEquals(12, count($nonPrivateAccountMedias));
+    }
+
+    public function testLikeMediaById()
+    {
+        // https://www.instagram.com/p/BcVEzBTgqKh/
+        self::$instagram->like('1663256735663694497');
+        $this->assertTrue(true, 'Return type ensures this assertion is never reached on failure');
+    }
+
+    public function testUnlikeMediaById()
+    {
+        // https://www.instagram.com/p/BcVEzBTgqKh/
+        self::$instagram->unlike('1663256735663694497');
+        $this->assertTrue(true, 'Return type ensures this assertion is never reached on failure');
+    }
+
+    public function testAddAndDeleteComment()
+    {
+        // https://www.instagram.com/p/BcVEzBTgqKh/
+        $comment1 = self::$instagram->addComment('1663256735663694497', 'Cool!');
+        $this->assertInstanceOf('InstagramScraper\Model\Comment', $comment1);
+
+        $comment2 = self::$instagram->addComment('1663256735663694497', '+1', $comment1);
+        $this->assertInstanceOf('InstagramScraper\Model\Comment', $comment2);
+
+        self::$instagram->deleteComment('1663256735663694497', $comment2);
+        $this->assertTrue(true, 'Return type ensures this assertion is never reached on failure');
+
+        self::$instagram->deleteComment('1663256735663694497', $comment1);
+        $this->assertTrue(true, 'Return type ensures this assertion is never reached on failure');
+    }
+    // TODO: Add test getMediaById
+    // TODO: Add test getLocationById
 }

@@ -331,4 +331,8 @@ trait InitializerTrait
         return $this->initProperty(\explode(',', $value), "is{$key}", $key);
     }
 
+    public function getUnparsed(){
+        return $this->data;
+    }
+
 }

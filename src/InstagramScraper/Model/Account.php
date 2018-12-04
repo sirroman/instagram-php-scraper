@@ -244,6 +244,8 @@ class Account extends AbstractModel
             case 'is_verified':
                 $this->isVerified = (bool)$value;
                 break;
+            default:
+                $this->data[$prop] = $value;
         }
     }
 }

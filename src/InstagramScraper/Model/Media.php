@@ -624,6 +624,8 @@ class Media extends AbstractModel
                     $this->type = static::TYPE_SIDECAR;
                 }
                 break;
+            default:
+                $this->data[$prop] = $value;
         }
         if (!$this->ownerId && !is_null($this->owner)) {
             $this->ownerId = $this->getOwner()->getId();

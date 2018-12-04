@@ -49,10 +49,10 @@ class InstagramTest extends TestCase
         $this->assertEquals('Донская государственная публичная библиотека - один из крупных культурных центров г. Ростова-на-Дону. ', $r->location->getBlurb());
         $this->assertEquals('http://www.dspl.ru/', $r->location->getWebsite());
         $this->assertEquals('8(863)2640600', $r->location->getPhone());
-        $address = json_decode('{"street_address": "\u0420\u043e\u0441\u0442\u043e\u0432-\u043d\u0430-\u0414\u043e\u043d\u0443, \u041f\u0443\u0448\u043a\u0438\u043d\u0441\u043a\u0430\u044f, 175 \u0410", "zip_code": "344000", "city_name": "Rostovnadonu, Rostovskaya Oblast\', Russia", "region_name": "", "country_code": "RU"}');
+        $address = json_decode('{"street_address": "\u0420\u043e\u0441\u0442\u043e\u0432-\u043d\u0430-\u0414\u043e\u043d\u0443, \u041f\u0443\u0448\u043a\u0438\u043d\u0441\u043a\u0430\u044f, 175 \u0410", "zip_code": "344000", "city_name": "Rostovnadonu, Rostovskaya Oblast\', Russia", "region_name": "", "country_code": "RU", "exact_city_match" : false, "exact_region_match" : false, "exact_country_match" : false}');
         $this->assertEquals($address, $r->location->getAddress());
-        $this->assertEquals('https://scontent-frt3-2.cdninstagram.com/vp/70f92aa1e46822db064d3434dc4f0922/5C3D1556/t51.2885-15/e35/c0.32.911.911/s150x150/42078547_294834521244918_6897421412395384832_n.jpg', $r->location->getProfilePicUrl());
 
+        $this->assertEquals('https://instagram.fhen2-1.fna.fbcdn.net/vp/0c12974e180dd786dcf5e4fabc65b2fd/5C9AECEA/t51.2885-15/e35/c0.134.1080.1080/s150x150/43118917_519198051889322_9201711179825161731_n.jpg', $r->location->getProfilePicUrl());
         $this->assertGreaterThan(26260, $r->location->getMediaCount());
         $this->assertGreaterThan(10, count($r->medias));
         $this->assertGreaterThan(5, count($r->topMedias));
@@ -61,6 +61,12 @@ class InstagramTest extends TestCase
 
         $r =$i->getLocationPage(1032158659, $r->medias[count($r->medias)-1]->getId());
         $this->assertGreaterThan(10, count($r->medias));
+
+
+        // checking that Instagram did not add new interesting properties
+        $unparsed = $r->location->getUnparsed();
+        unset ($unparsed['primary_alias_on_fb']);
+        $this->assertEquals(0, count ($unparsed));
 
     }
 
@@ -99,6 +105,52 @@ class InstagramTest extends TestCase
 
         $this->assertEquals(12, count($accountPage->medias));
 
+        // checking that Instagram did not add new interesting properties
+        $unparsed = $accountPage->account->getUnparsed();
+//        print_r($unparsed);
+        $this->assertNull($unparsed['business_email']);
+        $this->assertFalse($unparsed['has_channel']);
+        $this->assertNull($unparsed['connected_fb_page']);
+        $this->assertEquals(0, $unparsed['edge_felix_video_timeline']['count']);
+        $this->assertFalse($unparsed['has_channel']);
+        $this->assertFalse($unparsed['has_channel']);
+        $this->assertFalse($unparsed['has_channel']);
+        $this->assertFalse($unparsed['has_channel']);
+        unset ($unparsed['blocked_by_viewer']);
+        unset ($unparsed['country_block']);
+        unset ($unparsed['external_url_linkshimmed']);
+        unset ($unparsed['followed_by_viewer']);
+        unset ($unparsed['follows_viewer']);
+        unset ($unparsed['has_channel']);
+        unset ($unparsed['has_blocked_viewer']);
+        unset ($unparsed['highlight_reel_count']);
+        unset ($unparsed['has_requested_viewer']);
+        unset ($unparsed['is_business_account']);
+        unset ($unparsed['is_joined_recently']);
+        unset ($unparsed['business_category_name']);
+        unset ($unparsed['business_email']);
+        unset ($unparsed['business_phone_number']);
+        unset ($unparsed['business_address_json']);
+        unset ($unparsed['edge_mutual_followed_by']);
+        unset ($unparsed['requested_by_viewer']);
+        unset ($unparsed['connected_fb_page']);
+        unset ($unparsed['edge_felix_video_timeline']);
+        unset ($unparsed['edge_saved_media']);
+        unset ($unparsed['edge_media_collections']);
+        $this->assertEquals(0, count ($unparsed));
+
+
+
+        $unparsed = $accountPage->medias[0]->getUnparsed();
+//        print_r($unparsed);
+        unset ($unparsed['comments_disabled']);
+        unset ($unparsed['dimensions']);
+        unset ($unparsed['gating_info']);
+        unset ($unparsed['media_preview']);
+        unset ($unparsed['accessibility_caption']);
+        $this->assertEquals(0, count ($unparsed));
+//        print_r($accountPage->medias[0]);
+
         $response = $instagram->getMediasByUserId($accountPage->account->getId(), 12, $accountPage->pageInfo->end_cursor);
         $this->assertEquals(12, count($response->medias));
         $this->assertEquals(1, $response->pageInfo->has_next_page);
@@ -116,7 +168,7 @@ class InstagramTest extends TestCase
         sleep(self::SLEEP);
         $instagram = new Instagram();
         $media = $instagram->getMediaByUrl('https://www.instagram.com/p/BHaRdodBouH');
-//        print_r($media);
+
         $this->assertEquals('kevin', $media->getOwner()->getUsername());
         $this->assertGreaterThan(20, count($media->getComments()));
         // @TODO проверить позже может появятся лайки в будущем?
@@ -124,6 +176,7 @@ class InstagramTest extends TestCase
         $this->assertNull($media->getOwner()->getMediaCount());
         $this->assertNull($media->getOwner()->getFollowedByCount());
         $this->assertNull($media->getOwner()->getFollowsCount());
+//        $this->assertGreaterThan(time()-5, $media->get)
     }
 
     /**
