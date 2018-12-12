@@ -248,6 +248,7 @@ class Media extends AbstractModel
     }
 
     /**
+     * image 750px
      * @return string
      */
     public function getImageLowResolutionUrl()
@@ -256,6 +257,7 @@ class Media extends AbstractModel
     }
 
     /**
+     * image 640px
      * @return string
      */
     public function getImageThumbnailUrl()
@@ -264,6 +266,7 @@ class Media extends AbstractModel
     }
 
     /**
+     * image 1080px
      * @return string
      */
     public function getImageStandardResolutionUrl()
@@ -272,6 +275,7 @@ class Media extends AbstractModel
     }
 
     /**
+     * image 1080px
      * @return string
      */
     public function getImageHighResolutionUrl()
@@ -477,14 +481,15 @@ class Media extends AbstractModel
                             break;
                         case 1080:
                             $this->imageStandardResolutionUrl = $media['src'];
+                            $this->imageHighResolutionUrl = $media['src'];
                             break;
                     }
                 }
                 break;
             case 'thumbnail_resources':
                 $squareImagesUrl = [];
-                foreach ($value as $squareImage) {
-                    $squareImagesUrl[] = $squareImage['src'];
+                foreach ($value as $key => $squareImage) {
+                    $squareImagesUrl[$squareImage['config_width']] = $squareImage['src'];
                 }
                 $this->squareImages = $squareImagesUrl;
                 break;
@@ -492,7 +497,9 @@ class Media extends AbstractModel
                 $this->imageHighResolutionUrl = $value;
                 break;
             case 'display_src':
-                $this->imageHighResolutionUrl = $value;
+                if (strlen($this->imageHighResolutionUrl) < 2){
+                    $this->imageHighResolutionUrl = $value;
+                }
                 if (!isset($this->type)) {
                     $this->type = static::TYPE_IMAGE;
                 }

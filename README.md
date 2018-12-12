@@ -2,7 +2,10 @@
 This library is based on the Instagram web version. We develop it because nowadays it is hard to get an approved Instagram application. The purpose is to support every feature that the web desktop and mobile version support. 
 
 ## Upstream
+https://help.github.com/articles/configuring-a-remote-for-a-fork/
+
 ```
+git remote add upstream https://github.com/postaddictme/instagram-php-scraper
 git pull upstream master
 ```
 

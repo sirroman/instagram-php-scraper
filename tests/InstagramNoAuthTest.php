@@ -52,7 +52,7 @@ class InstagramTest extends TestCase
         $address = json_decode('{"street_address": "\u0420\u043e\u0441\u0442\u043e\u0432-\u043d\u0430-\u0414\u043e\u043d\u0443, \u041f\u0443\u0448\u043a\u0438\u043d\u0441\u043a\u0430\u044f, 175 \u0410", "zip_code": "344000", "city_name": "Rostovnadonu, Rostovskaya Oblast\', Russia", "region_name": "", "country_code": "RU", "exact_city_match" : false, "exact_region_match" : false, "exact_country_match" : false}');
         $this->assertEquals($address, $r->location->getAddress());
 
-        $this->assertEquals('https://instagram.fhen2-1.fna.fbcdn.net/vp/0c12974e180dd786dcf5e4fabc65b2fd/5C9AECEA/t51.2885-15/e35/c0.134.1080.1080/s150x150/43118917_519198051889322_9201711179825161731_n.jpg', $r->location->getProfilePicUrl());
+        $this->assertGreaterThan(30,strlen( $r->location->getProfilePicUrl()));
         $this->assertGreaterThan(26260, $r->location->getMediaCount());
         $this->assertGreaterThan(10, count($r->medias));
         $this->assertGreaterThan(5, count($r->topMedias));
@@ -79,10 +79,31 @@ class InstagramTest extends TestCase
     {
         $instagram = new Instagram();
         $response = $instagram->getMediasByUserId(3, 13);
-
+//print_r($response->medias[0]); exit();
         $this->assertEquals(13, count($response->medias));
         $this->assertEquals(1, $response->pageInfo->has_next_page);
         $this->assertGreaterThan(1600, $response->count);
+        $this->assertEquals(3, $response->medias[0]->getOwnerId());
+        $this->assertEquals(3, $response->medias[0]->getOwner()->getId());
+        $this->assertGreaterThan(20, strlen($response->medias[0]->getImageHighResolutionUrl()));
+        $this->assertGreaterThan(20, strlen($response->medias[0]->getImageThumbnailUrl()));
+        $this->assertEquals(0, strlen($response->medias[0]->getImageStandardResolutionUrl()));
+        $this->assertEquals(0, strlen($response->medias[0]->getImageLowResolutionUrl()));
+
+        $countSquare = 0;
+        foreach ($response->medias[0]->getSquareImages() as $key => $squareImage) {
+            $this->assertGreaterThan(20, strlen($squareImage));
+            $countSquare++;
+        }
+        $this->assertGreaterThan(3, $countSquare);
+
+        // checking that Instagram did not add new interesting properties
+        $unparsed = $response->medias[0]->getUnparsed();
+        unset ($unparsed['comments_disabled']);
+        unset ($unparsed['dimensions']);
+        unset ($unparsed['gating_info']);
+        unset ($unparsed['media_preview']);
+        $this->assertEquals(0, count ($unparsed));
 
 
         $response = $instagram->getMediasByUserId(3, 13, $response->pageInfo->end_cursor);
@@ -170,6 +191,7 @@ class InstagramTest extends TestCase
         $media = $instagram->getMediaByUrl('https://www.instagram.com/p/BHaRdodBouH');
 
         $this->assertEquals('kevin', $media->getOwner()->getUsername());
+        $this->assertEquals(3, $media->getOwner()->getId());
         $this->assertGreaterThan(20, count($media->getComments()));
         // @TODO проверить позже может появятся лайки в будущем?
         //$this->assertEquals(10, count($media->getLikes()));
@@ -177,6 +199,18 @@ class InstagramTest extends TestCase
         $this->assertNull($media->getOwner()->getFollowedByCount());
         $this->assertNull($media->getOwner()->getFollowsCount());
 //        $this->assertGreaterThan(time()-5, $media->get)
+        $this->assertGreaterThan(20, strlen($media->getImageHighResolutionUrl()));
+        $this->assertGreaterThan(20, strlen($media->getImageStandardResolutionUrl()));
+        $this->assertGreaterThan(20, strlen($media->getImageLowResolutionUrl()));
+        $this->assertGreaterThan(20, strlen($media->getImageThumbnailUrl()));
+
+        $countSquare = 0;
+        foreach ($media->getSquareImages() as $key => $squareImage) {
+            $this->assertGreaterThan(20, strlen($squareImage));
+            $countSquare++;
+        }
+        // getMediaByUrl does not return small images
+        $this->assertEquals(0, $countSquare);
     }
 
     /**
@@ -193,6 +227,17 @@ class InstagramTest extends TestCase
         $this->assertGreaterThan(5, count($media->getComments()));
         //$this->assertGreaterThan(5, count($media->getLikes()));
         $this->assertEquals(5, count($media->getSidecarMedias()));
+        $this->assertGreaterThan(20, strlen($media->getImageHighResolutionUrl()));
+        $this->assertGreaterThan(20, strlen($media->getImageStandardResolutionUrl()));
+        $this->assertGreaterThan(20, strlen($media->getImageLowResolutionUrl()));
+        $this->assertGreaterThan(20, strlen($media->getImageThumbnailUrl()));
+
+        $countSquare = 0;
+        foreach ($media->getSquareImages() as $key => $squareImage) {
+            $this->assertGreaterThan(20, strlen($squareImage));
+        }
+        // getMediaByUrl does not return small images
+        $this->assertEquals(0, $countSquare);
 
     }
 
@@ -211,6 +256,17 @@ class InstagramTest extends TestCase
         $this->assertGreaterThan(15, count($media->getComments()));
         //$this->assertGreaterThan(5, count($media->getLikes()));
         $this->assertEquals(0, count($media->getSidecarMedias()));
+        $this->assertGreaterThan(20, strlen($media->getImageHighResolutionUrl()));
+        $this->assertGreaterThan(20, strlen($media->getImageStandardResolutionUrl()));
+        $this->assertGreaterThan(20, strlen($media->getImageLowResolutionUrl()));
+        $this->assertGreaterThan(20, strlen($media->getImageThumbnailUrl()));
+
+        $countSquare = 0;
+        foreach ($media->getSquareImages() as $key => $squareImage) {
+            $this->assertGreaterThan(20, strlen($squareImage));
+        }
+        // getMediaByUrl does not return small images
+        $this->assertEquals(0, $countSquare);
 
     }
 
