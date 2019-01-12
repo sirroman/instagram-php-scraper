@@ -769,18 +769,14 @@ class Instagram
     /**
      * We work only on https in this case if we have same cookies on Secure and not - we will choice Secure cookie
      *
-     * @param string $headers
+     * @param array $headers
      *
      * @return array
      */
     private static function parseCookies($headers)
     {
-        if (isset ($headers['Set-Cookie'])){
-            $rawCookies = $headers['Set-Cookie'];
-        }else{
-            $rawCookies = $headers['set-cookie'];
-        }
-
+        $rawCookies = isset($headers['Set-Cookie']) ? $headers['Set-Cookie'] : isset($headers['set-cookie']) ? $headers['set-cookie'] : [];
+        
         if (!is_array($rawCookies)) {
             $rawCookies = [$rawCookies];
         }
@@ -805,6 +801,11 @@ class Instagram
         }
 
         $cookies = $secure_cookies + $not_secure_cookies;
+        
+        if (! isset($cookies['csrftoken'])) {
+            $cookie['csrftoken']='';
+        }
+        
         return $cookies;
     }
 
@@ -846,6 +847,7 @@ class Instagram
             if ($response->code !== static::HTTP_OK) {
                 throw new InstagramException('Response code is ' . $response->code . '. Body: ' . ' Something went wrong. Please report issue.', $response->code);
             }
+
             $cookies = self::parseCookies($response->headers);
             $this->userSession['csrftoken'] = $cookies['csrftoken'];
 
@@ -930,6 +932,7 @@ class Instagram
      */
     public function getTagPage($tag, $count = 12, $maxId = '', $minTimestamp = null)
     {
+
         $index = 0;
         $medias = [];
         $mediaIds = [];
@@ -938,19 +941,20 @@ class Instagram
         while ($index < $count && $hasNextPage) {
             $response = Request::get(Endpoints::getMediasJsonByTagLink($tag, $maxId),
                 $this->generateHeaders($this->userSession));
-            if (static::HTTP_RATE_LIMIT === $response->code) {
+            if ($response->code === static::HTTP_RATE_LIMIT ) {
                 throw new InstagramRateLimitException('Rate limit exception',static::HTTP_RATE_LIMIT);
             }
+
+            if ($response->code === static::HTTP_NOT_FOUND) {
+                throw new InstagramNotFoundException('Tag does not exist.', static::HTTP_NOT_FOUND);
+            }
+
             if ($response->code !== static::HTTP_OK) {
                 throw new InstagramException('Response code is ' . $response->code . '. Body: ' . ' Something went wrong. Please report issue.', $response->code);
             }
 
-
             $cookies = static::parseCookies($response->headers);
-
-
             $this->userSession['csrftoken'] = $cookies['csrftoken'];
-
             $arr = $this->decodeRawBodyToJson($response->raw_body);
 
             if (!is_array($arr)) {
@@ -1038,7 +1042,6 @@ class Instagram
 
         $cookies = static::parseCookies($response->headers);
         $this->userSession['csrftoken'] = $cookies['csrftoken'];
-
         $arr = $this->decodeRawBodyToJson($response->raw_body);
 
         if (!is_array($arr)) {
@@ -1149,9 +1152,10 @@ class Instagram
                 throw new InstagramException('Response code is ' . $response->code . '. Body: ' . static::getErrorBody($response->body) . ' Something went wrong. Please report issue.', $response->code);
             }
 
-            $cookies = static::parseCookies($response->headers);
 
+            $cookies = static::parseCookies($response->headers);
             $this->userSession['csrftoken'] = $cookies['csrftoken'];
+
             $arr = $this->decodeRawBodyToJson($response->raw_body);
 
             $result->location = Location::create($arr['graphql']['location']);
