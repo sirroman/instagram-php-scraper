@@ -9,7 +9,7 @@ use PHPUnit\Framework\TestCase;
 
 /**
  * Class InstagramTest
- * @group noAuth
+     * @group noAuth
  */
 class InstagramTest extends TestCase
 {
@@ -129,32 +129,32 @@ class InstagramTest extends TestCase
         // checking that Instagram did not add new interesting properties
         $unparsed = $accountPage->account->getUnparsed();
 //        print_r($unparsed);
-        $this->assertNull($unparsed['business_email']);
-        $this->assertFalse($unparsed['has_channel']);
-        $this->assertNull($unparsed['connected_fb_page']);
+        $this->assertEquals('', $accountPage->account->getBusinessEmail());
+        $this->assertFalse($accountPage->account->isHasChannel());
+        $this->assertNull($accountPage->account->getConnectedFbPage());
         $this->assertEquals(0, $unparsed['edge_felix_video_timeline']['count']);
-        $this->assertFalse($unparsed['has_channel']);
-        $this->assertFalse($unparsed['has_channel']);
-        $this->assertFalse($unparsed['has_channel']);
-        $this->assertFalse($unparsed['has_channel']);
-        unset ($unparsed['blocked_by_viewer']);
-        unset ($unparsed['country_block']);
+        $this->assertFalse($accountPage->account->isBlockedByViewer());
+        $this->assertFalse($accountPage->account->isCountryBlock());
+        $this->assertFalse($accountPage->account->isFollowedByViewer());
+        $this->assertFalse($accountPage->account->isFollowsViewer());
+        $this->assertFalse($accountPage->account->isHasBlockedViewer());
+        $this->assertEquals(0, $accountPage->account->getHighlightReelCount());
+        $this->assertFalse($accountPage->account->isHasRequestedViewer());
+        $this->assertFalse($accountPage->account->isBusinessAccount());
+        $this->assertFalse($accountPage->account->isJoinedRecently());
+        $this->assertEquals('', $accountPage->account->getBusinessCategoryName());
+        $this->assertEquals('', $accountPage->account->getBusinessPhoneNumber());
+        $this->assertEquals('{}',$accountPage->account->getBusinessAddressJson());
+        $this->assertFalse($accountPage->account->isRequestedByViewer());
+
+
+
+
+
+
+
         unset ($unparsed['external_url_linkshimmed']);
-        unset ($unparsed['followed_by_viewer']);
-        unset ($unparsed['follows_viewer']);
-        unset ($unparsed['has_channel']);
-        unset ($unparsed['has_blocked_viewer']);
-        unset ($unparsed['highlight_reel_count']);
-        unset ($unparsed['has_requested_viewer']);
-        unset ($unparsed['is_business_account']);
-        unset ($unparsed['is_joined_recently']);
-        unset ($unparsed['business_category_name']);
-        unset ($unparsed['business_email']);
-        unset ($unparsed['business_phone_number']);
-        unset ($unparsed['business_address_json']);
         unset ($unparsed['edge_mutual_followed_by']);
-        unset ($unparsed['requested_by_viewer']);
-        unset ($unparsed['connected_fb_page']);
         unset ($unparsed['edge_felix_video_timeline']);
         unset ($unparsed['edge_saved_media']);
         unset ($unparsed['edge_media_collections']);

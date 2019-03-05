@@ -19,6 +19,8 @@ use InstagramScraper\Model\Story;
 use InstagramScraper\Model\Tag;
 use InstagramScraper\Model\TagPage;
 use InstagramScraper\Model\UserStories;
+use InstagramScraper\TwoStepVerification\ConsoleVerification;
+use InstagramScraper\TwoStepVerification\TwoStepVerificationInterface;
 use InvalidArgumentException;
 use phpFastCache\Cache\ExtendedCacheItemPoolInterface;
 use phpFastCache\CacheManager;
@@ -744,8 +746,11 @@ class Instagram
             if (static::HTTP_OK !== $response->code) {
                 throw new InstagramException('Response code is ' . $response->code . '. Body: ' . static::getErrorBody($response->body) . ' Something went wrong. Please report issue.', $response->code);
             }
-            $cookies = static::parseCookies($response->headers);
-            $this->userSession['csrftoken'] = $cookies['csrftoken'];
+
+            $this->parseCookies($response->headers);
+
+
+
             $jsonResponse = $this->decodeRawBodyToJson($response->raw_body);
             $nodes = $jsonResponse['data']['shortcode_media']['edge_media_to_comment']['edges'];
             foreach ($nodes as $commentArray) {
@@ -773,10 +778,10 @@ class Instagram
      *
      * @return array
      */
-    private static function parseCookies($headers)
+    private function parseCookies($headers)
     {
-        $rawCookies = isset($headers['Set-Cookie']) ? $headers['Set-Cookie'] : isset($headers['set-cookie']) ? $headers['set-cookie'] : [];
-        
+        $rawCookies = isset($headers['Set-Cookie']) ? $headers['Set-Cookie'] : (isset($headers['set-cookie']) ? $headers['set-cookie'] : []);
+
         if (!is_array($rawCookies)) {
             $rawCookies = [$rawCookies];
         }
@@ -801,11 +806,12 @@ class Instagram
         }
 
         $cookies = $secure_cookies + $not_secure_cookies;
-        
-        if (! isset($cookies['csrftoken'])) {
-            $cookie['csrftoken']='';
+
+        if (isset($cookies['csrftoken'])) {
+            $this->userSession['csrftoken'] = $cookies['csrftoken'];
+
         }
-        
+
         return $cookies;
     }
 
@@ -847,9 +853,7 @@ class Instagram
             if ($response->code !== static::HTTP_OK) {
                 throw new InstagramException('Response code is ' . $response->code . '. Body: ' . ' Something went wrong. Please report issue.', $response->code);
             }
-
-            $cookies = self::parseCookies($response->headers);
-            $this->userSession['csrftoken'] = $cookies['csrftoken'];
+            $this->parseCookies($response->headers);
 
             $jsonResponse = $this->decodeRawBodyToJson($response->raw_body);
 
@@ -953,8 +957,7 @@ class Instagram
                 throw new InstagramException('Response code is ' . $response->code . '. Body: ' . ' Something went wrong. Please report issue.', $response->code);
             }
 
-            $cookies = static::parseCookies($response->headers);
-            $this->userSession['csrftoken'] = $cookies['csrftoken'];
+            $this->parseCookies($response->headers);
             $arr = $this->decodeRawBodyToJson($response->raw_body);
 
             if (!is_array($arr)) {
@@ -1040,8 +1043,8 @@ class Instagram
             throw new InstagramException('Response code is ' . $response->code . '. Body: ' . static::getErrorBody($response->body) . ' Something went wrong. Please report issue.', $response->code);
         }
 
-        $cookies = static::parseCookies($response->headers);
-        $this->userSession['csrftoken'] = $cookies['csrftoken'];
+        $this->parseCookies($response->headers);
+
         $arr = $this->decodeRawBodyToJson($response->raw_body);
 
         if (!is_array($arr)) {
@@ -1086,7 +1089,28 @@ class Instagram
      */
     public function getCurrentTopMediasByTagName($tag)
     {
+
         return $this->getTagPage($tag)->topMedias;
+
+//        $response = Request::get(Endpoints::getMediasJsonByTagLink($tagName, ''),
+//            $this->generateHeaders($this->userSession));
+//
+//        if ($response->code === static::HTTP_NOT_FOUND) {
+//            throw new InstagramNotFoundException('Account with given username does not exist.');
+//        }
+//        if ($response->code !== static::HTTP_OK) {
+//            throw new InstagramException('Response code is ' . $response->code . '. Body: ' . static::getErrorBody($response->body) . ' Something went wrong. Please report issue.');
+//        }
+//
+//        $this->parseCookies($response->headers);
+//        $jsonResponse = $this->decodeRawBodyToJson($response->raw_body);
+//        $medias = [];
+//        $nodes = (array)@$jsonResponse['graphql']['hashtag']['edge_hashtag_to_top_posts']['edges'];
+//        foreach ($nodes as $mediaArray) {
+//            $medias[] = Media::create($mediaArray['node']);
+//        }
+//        return $medias;
+
     }
 
     /**
@@ -1111,9 +1135,8 @@ class Instagram
         if ($response->code !== static::HTTP_OK) {
             throw new InstagramException('Response code is ' . $response->code . '. Body: ' . static::getErrorBody($response->body) . ' Something went wrong. Please report issue.', $response->code);
         }
+        $this->parseCookies($response->headers);
 
-        $cookies = static::parseCookies($response->headers);
-        $this->userSession['csrftoken'] = $cookies['csrftoken'];
         $jsonResponse = $this->decodeRawBodyToJson($response->raw_body);
         $nodes = $jsonResponse['location']['top_posts']['nodes'];
         $medias = [];
@@ -1152,9 +1175,7 @@ class Instagram
                 throw new InstagramException('Response code is ' . $response->code . '. Body: ' . static::getErrorBody($response->body) . ' Something went wrong. Please report issue.', $response->code);
             }
 
-
-            $cookies = static::parseCookies($response->headers);
-            $this->userSession['csrftoken'] = $cookies['csrftoken'];
+            $this->parseCookies($response->headers);
 
             $arr = $this->decodeRawBodyToJson($response->raw_body);
 
@@ -1200,8 +1221,8 @@ class Instagram
             throw new InstagramException('Response code is ' . $response->code . '. Body: ' . static::getErrorBody($response->body) . ' Something went wrong. Please report issue.', $response->code);
         }
 
-        $cookies = static::parseCookies($response->headers);
-        $this->userSession['csrftoken'] = $cookies['csrftoken'];
+
+        $this->parseCookies($response->headers);
 
         $jsonResponse = $this->decodeRawBodyToJson($response->raw_body);
         return Location::create($jsonResponse['graphql']['location']);
@@ -1397,7 +1418,7 @@ class Instagram
 
     /**
      * @param bool $force
-     * @param bool $support_two_step_verification
+     * @param bool|TwoStepVerificationInterface $twoStepVerificator
      *
      * $support_two_step_verification true works only in cli mode - just run login in cli mode - save cookie to file and use in any mode
      *
@@ -1406,10 +1427,14 @@ class Instagram
      *
      * @return array
      */
-    public function login($force = false, $support_two_step_verification = false)
+    public function login($force = false, $twoStepVerificator = null)
     {
         if ($this->sessionUsername == null || $this->sessionPassword == null) {
             throw new InstagramAuthException("User credentials not provided");
+        }
+
+        if ($twoStepVerificator === true) {
+            $twoStepVerificator = new ConsoleVerification();
         }
 
         $cachedString = static::$instanceCache->getItem($this->sessionUsername);
@@ -1426,6 +1451,9 @@ class Instagram
                 $csrfToken = $match[1];
             }
 
+            $cookies = $this->parseCookies($response->headers);
+
+
             $cookies = static::parseCookies($response->headers);
             $mid = $cookies['mid'];
             $headers = [
@@ -1440,12 +1468,14 @@ class Instagram
                 ['username' => $this->sessionUsername, 'password' => $this->sessionPassword]);
 //            print_r($response);
             if ($response->code !== static::HTTP_OK) {
-                if ($response->code === static::HTTP_BAD_REQUEST && isset($response->body->message) && $response->body->message == 'checkpoint_required' ) {
-                    if ( $support_two_step_verification){
-                        $response = $this->verifyTwoStep($response, $cookies);
-                    }else{
-                        throw new CheckpointRequiredException("checkpoint_required", 403);
-                    }
+
+                if (
+                    $response->code === static::HTTP_BAD_REQUEST
+                    && isset($response->body->message)
+                    && $response->body->message == 'checkpoint_required'
+                    && !empty($twoStepVerificator)
+                ) {
+                    $response = $this->verifyTwoStep($response, $cookies, $twoStepVerificator);
 
                 } elseif ((is_string($response->code) || is_numeric($response->code)) && is_string($response->body)) {
                     throw new InstagramAuthException('Response code is ' . $response->code . '. Body: ' . $response->body . ' Something went wrong. Please report issue.', $response->code);
@@ -1471,7 +1501,9 @@ class Instagram
                 }
             }
 
-            $cookies = static::parseCookies($response->headers);
+
+            $cookies = $this->parseCookies($response->headers);
+
             $cookies['mid'] = $mid;
             $cachedString->set($cookies);
             static::$instanceCache->save($cachedString);
@@ -1490,7 +1522,7 @@ class Instagram
      */
     public function isLoggedIn($session)
     {
-        if (is_null($session) || !isset($session['sessionid'])) {
+        if ($session === null || !isset($session['sessionid'])) {
             return false;
         }
         $sessionId = $session['sessionid'];
@@ -1506,7 +1538,7 @@ class Instagram
         if ($response->code !== static::HTTP_OK) {
             return false;
         }
-        $cookies = static::parseCookies($response->headers);
+        $cookies = $this->parseCookies($response->headers);
         if (!isset($cookies['ds_user_id'])) {
             return false;
         }
@@ -1516,16 +1548,17 @@ class Instagram
     /**
      * @param $response
      * @param $cookies
+     * @param TwoStepVerificationInterface $twoStepVerificator
      * @return \Unirest\Response
      * @throws InstagramAuthException
      */
-    private function verifyTwoStep($response, $cookies)
+    private function verifyTwoStep($response, $cookies, $twoStepVerificator)
     {
-        $new_cookies = static::parseCookies($response->headers);
+        $new_cookies = $this->parseCookies($response->headers);
         $cookies = array_merge($cookies, $new_cookies);
         $cookie_string = '';
         foreach ($cookies as $name => $value) {
-            $cookie_string .= $name . "=" . $value . "; ";
+            $cookie_string .= $name . '=' . $value . '; ';
         }
         $headers = [
             'cookie' => $cookie_string,
@@ -1556,26 +1589,7 @@ class Instagram
             }
 
             if (!empty($choices)) {
-                if (count($choices) > 1) {
-                    $possible_values = [];
-                    print "Select where to send security code\n";
-                    foreach ($choices as $choice) {
-                        print $choice['label'] . " - " . $choice['value'] . "\n";
-                        $possible_values[$choice['value']] = true;
-                    }
-
-                    $selected_choice = null;
-                    while (empty($possible_values[$selected_choice])) {
-                        if ($selected_choice) {
-                            print "Wrong choice. Try again\n";
-                        }
-                        print "Your choice: ";
-                        $selected_choice = trim(fgets(STDIN));
-                    }
-                } else {
-                    print "Message with security code sent to: " . $choices[0]['label'] . "\n";
-                    $selected_choice = $choices[0]['value'];
-                }
+                $selected_choice = $twoStepVerificator->getVerificationType($choices);
                 $response = Request::post($url, $headers, ['choice' => $selected_choice]);
             }
         }
@@ -1584,14 +1598,8 @@ class Instagram
             throw new InstagramAuthException('Something went wrong when try two step verification. Please report issue.', $response->code);
         }
 
-        $security_code = null;
-        while (strlen($security_code) != 6 && !is_int($security_code)) {
-            if ($security_code) {
-                print "Wrong security code\n";
-            }
-            print "Enter security code: ";
-            $security_code = trim(fgets(STDIN));
-        }
+        $security_code = $twoStepVerificator->getSecurityCode();
+
         $post_data = [
             'csrfmiddlewaretoken' => $cookies['csrftoken'],
             'verify' => 'Verify Account',
