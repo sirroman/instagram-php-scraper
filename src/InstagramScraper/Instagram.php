@@ -203,6 +203,11 @@ class Instagram
         Request::proxy('');
     }
 
+
+    public function setRhxGis( $rhxGis ){
+        $this->rhxGis = $rhxGis;
+    }
+
     /**
      * @param string $username
      *
@@ -356,6 +361,7 @@ class Instagram
         }
 
         $userArray = self::extractSharedDataFromBody($response->raw_body);
+        $this->rhxGis= $userArray['rhx_gis'];
 
         if (!isset($userArray['entry_data']['ProfilePage'][0]['graphql']['user'])) {
             throw new InstagramNotFoundException('Account with this username does not exist', static::HTTP_NOT_FOUND);
@@ -375,6 +381,8 @@ class Instagram
         }
         $accountPage->pageInfo->end_cursor = $userArray['entry_data']['ProfilePage'][0]['graphql']['user']['edge_owner_to_timeline_media']['page_info']['end_cursor'];
         $accountPage->pageInfo->has_next_page = $userArray['entry_data']['ProfilePage'][0]['graphql']['user']['edge_owner_to_timeline_media']['page_info']['has_next_page'];
+
+        $accountPage->rhxGis = $userArray['rhx_gis'];
 
         return $accountPage;
     }
@@ -397,7 +405,8 @@ class Instagram
     private static function extractSharedDataFromBody($body)
     {
         if (preg_match_all('#\_sharedData \= (.*?)\;\<\/script\>#', $body, $out)) {
-            return json_decode($out[1][0], true, 512, JSON_BIGINT_AS_STRING);
+            $data = json_decode($out[1][0], true, 512, JSON_BIGINT_AS_STRING);
+            return $data;
         }
         return null;
     }

@@ -27,6 +27,11 @@ class AccountResponse
      */
     public $pageInfo;
 
+    /**
+     * @var string
+     */
+    public $rhxGis;
+
     public function __construct()
     {
         $this->pageInfo = new PageInfo();
