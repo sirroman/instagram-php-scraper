@@ -39,6 +39,8 @@ class Endpoints
 
     const GRAPH_QL_QUERY_URL = 'https://www.instagram.com/graphql/query/?query_id={{queryId}}';
 
+    const ACCOUNT_HIGHLIGHT_REELS = 'https://www.instagram.com/graphql/query/?query_hash=7c16654f22c819fb63d1183034a5162f&variables={variables}';
+
     private static $requestMediaCount = 30;
 
     /**
@@ -202,5 +204,10 @@ class Endpoints
         $url = str_replace('{mediaId}', $mediaId, static::DELETE_COMMENT_URL);
         $url = str_replace('{commentId}', $commentId, $url);
         return $url;
+    }
+
+    public static function getHighlightReelsLink($variables)
+    {
+        return str_replace('{variables}', urlencode($variables), static::ACCOUNT_HIGHLIGHT_REELS);;
     }
 }

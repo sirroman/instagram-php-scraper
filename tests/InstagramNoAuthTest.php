@@ -294,6 +294,27 @@ class InstagramTest extends TestCase
         $this->assertInstanceOf(Media::class, array_pop($tagPage->topMedias));
     }
 
+    /**
+     * @group highlightReels
+     */
+    public function testGetReels(){
+        $instagram = new Instagram();
+        $r = $instagram->getHighlighReels(289053702);
+
+        $this->assertGreaterThan(2, count($r->stories));
+        $this->assertGreaterThan(1000000, $r->stories[0]->getId());
+        $this->assertEquals(Media::TYPE_HIGHLIGHT_REEL, $r->stories[0]->getType());
+
+        $this->assertGreaterThan(1, strlen($r->stories[0]->getCaption()));
+
+        print $r->stories[0]->getImageStandardResolutionUrl();
+
+        $this->assertEquals(200, $this->getHttpCode($r->stories[0]->getImageHighResolutionUrl()));
+        $this->assertEquals(200, $this->getHttpCode($r->stories[0]->getImageLowResolutionUrl()));
+
+    }
+
+
     protected function getHttpCode($url) {
         $handle = curl_init($url);
         curl_setopt($handle, CURLOPT_RETURNTRANSFER, true);

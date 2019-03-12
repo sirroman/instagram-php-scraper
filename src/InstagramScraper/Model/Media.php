@@ -14,6 +14,7 @@ class Media extends AbstractModel
     const TYPE_VIDEO = 'video';
     const TYPE_SIDECAR = 'sidecar';
     const TYPE_CAROUSEL = 'carousel';
+    const TYPE_HIGHLIGHT_REEL = 'highlightreel';
 
     /**
      * @var string
@@ -643,7 +644,18 @@ class Media extends AbstractModel
                     $this->type = static::TYPE_VIDEO;
                 } else if ($value == 'GraphSidecar') {
                     $this->type = static::TYPE_SIDECAR;
+                } else if ($value = 'GraphHighlightReel'){
+                    $this->type = static::TYPE_HIGHLIGHT_REEL;
                 }
+                break;
+            case 'cover_media':
+                $this->imageHighResolutionUrl = $value['thumbnail_src'];
+                break;
+            case 'cover_media_cropped_thumbnail':
+                $this->imageLowResolutionUrl = $value['url'];
+                break;
+            case 'title':
+                $this->caption = $value;
                 break;
             default:
                 $this->data[$prop] = $value;
