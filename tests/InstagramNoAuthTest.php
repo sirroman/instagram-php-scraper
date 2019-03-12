@@ -17,7 +17,6 @@ class InstagramTest extends TestCase
 
     /**
      * @group getLocationById
-     * @group noAuth
      */
     public function testGetLocationById()
     {
@@ -34,7 +33,6 @@ class InstagramTest extends TestCase
 
     /**
      * @group getLocationPage
-     * @group noAuth
      */
     public function testGetMediasByLocationId()
     {
@@ -58,6 +56,8 @@ class InstagramTest extends TestCase
         $this->assertGreaterThan(5, count($r->topMedias));
         $this->assertInstanceOf(Media::class, $r->medias[0]);
         $this->assertInstanceOf(Media::class, $r->topMedias[0]);
+        $this->assertGreaterThan(3,$r->topMedias[0]->getOwnerId());
+        $this->assertGreaterThan(3,$r->medias[0]->getOwnerId());
 
         $r =$i->getLocationPage(1032158659, $r->medias[count($r->medias)-1]->getId());
         $this->assertGreaterThan(10, count($r->medias));
@@ -146,7 +146,7 @@ class InstagramTest extends TestCase
         $this->assertEquals('', $accountPage->account->getBusinessPhoneNumber());
         $this->assertEquals('{}',$accountPage->account->getBusinessAddressJson());
         $this->assertFalse($accountPage->account->isRequestedByViewer());
-
+        $this->assertEquals(3, $accountPage->medias[1]->getOwnerId());
 
 
 
@@ -290,8 +290,12 @@ class InstagramTest extends TestCase
         $instagram = new Instagram();
         $tagPage = $instagram->getTagPage('bnw',30);
         $this->assertGreaterThan(200000, $tagPage->count);
-        $this->assertInstanceOf(Media::class, array_pop($tagPage->medias));
-        $this->assertInstanceOf(Media::class, array_pop($tagPage->topMedias));
+//        print_r($tagPage);
+        $this->assertInstanceOf(Media::class, $tagPage->medias[0]);
+        $this->assertInstanceOf(Media::class, $tagPage->topMedias[0]);
+        $this->assertGreaterThan(3, $tagPage->topMedias[0]->getOwnerId());
+        $this->assertGreaterThan(3, $tagPage->medias[0]->getOwnerId());
+
     }
 
     protected function getHttpCode($url) {

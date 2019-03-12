@@ -959,7 +959,7 @@ class Instagram
 
             $this->parseCookies($response->headers);
             $arr = $this->decodeRawBodyToJson($response->raw_body);
-
+//print_r($arr);
             if (!is_array($arr)) {
                 throw new InstagramException('Response decoding failed. Returned data corrupted or this library outdated. Please report issue');
             }
