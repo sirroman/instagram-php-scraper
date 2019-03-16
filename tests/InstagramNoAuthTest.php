@@ -308,6 +308,9 @@ class InstagramTest extends TestCase
         $this->assertEquals(200, $this->getHttpCode($r->stories[0]->getImageHighResolutionUrl()));
         $this->assertEquals(200, $this->getHttpCode($r->stories[0]->getImageLowResolutionUrl()));
         $this->assertTrue($r->hasPublicStory);
+
+        $this->assertInstanceOf(\InstagramScraper\Model\Account::class, $r->account);
+        $this->assertEquals(309893914, $r->account->getId());
     }
 
 
