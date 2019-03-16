@@ -1765,7 +1765,10 @@ class Instagram
         $storiesResponse->hasPublicStory = (bool) $jsonResponse['data']['user']['has_public_story'];
 
         foreach ($jsonResponse['data']['user']['edge_highlight_reels']['edges'] as $edge) {
-            $storiesResponse->stories[] = Story::create($edge['node']);
+            $story = Story::create($edge['node']);
+            $storiesResponse->stories[] = $story;
+            $account = $story->getOwner();
+            $storiesResponse->account = $account;
         }
 
         return $storiesResponse;
