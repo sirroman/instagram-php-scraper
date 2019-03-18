@@ -51,7 +51,7 @@ class Instagram
     private $sessionUsername;
     private $sessionPassword;
     private $userSession;
-    private $rhxGis = null;
+    protected $rhxGis = null;
     private $userAgent = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/69.0.3497.100 Safari/537.36';
 
     /**
@@ -498,6 +498,10 @@ class Instagram
             }
         }
 
+        return $this->rhxGis;
+    }
+
+    public function getCachedRhxGis(){
         return $this->rhxGis;
     }
 
