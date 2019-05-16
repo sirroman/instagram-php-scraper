@@ -148,9 +148,7 @@ class InstagramTest extends TestCase
         $this->assertFalse($accountPage->account->isRequestedByViewer());
         $this->assertEquals(3, $accountPage->medias[1]->getOwnerId());
 
-
-
-
+        $this->assertGreaterThan(10, strlen($accountPage->rhxGis));
 
 
         unset ($unparsed['external_url_linkshimmed']);
@@ -171,7 +169,7 @@ class InstagramTest extends TestCase
         unset ($unparsed['accessibility_caption']);
         $this->assertEquals(0, count ($unparsed));
 //        print_r($accountPage->medias[0]);
-
+        $instagram->setRhxGis($accountPage->rhxGis);
         $response = $instagram->getMediasByUserId($accountPage->account->getId(), 12, $accountPage->pageInfo->end_cursor);
         $this->assertEquals(12, count($response->medias));
         $this->assertEquals(1, $response->pageInfo->has_next_page);
@@ -297,6 +295,28 @@ class InstagramTest extends TestCase
         $this->assertGreaterThan(3, $tagPage->medias[0]->getOwnerId());
 
     }
+
+    /**
+     * @group highlightReels
+     */
+    public function testGetReels(){
+        $instagram = new Instagram();
+        $r = $instagram->getHighlighReels(309893914);
+
+        $this->assertGreaterThan(2, count($r->stories));
+        $this->assertGreaterThan(1000000, $r->stories[0]->getId());
+        $this->assertEquals(Media::TYPE_HIGHLIGHT_REEL, $r->stories[0]->getType());
+
+        $this->assertGreaterThan(1, strlen($r->stories[0]->getCaption()));
+
+        $this->assertEquals(200, $this->getHttpCode($r->stories[0]->getImageHighResolutionUrl()));
+        $this->assertEquals(200, $this->getHttpCode($r->stories[0]->getImageLowResolutionUrl()));
+        $this->assertTrue($r->hasPublicStory);
+
+        $this->assertInstanceOf(\InstagramScraper\Model\Account::class, $r->account);
+        $this->assertEquals(309893914, $r->account->getId());
+    }
+
 
     protected function getHttpCode($url) {
         $handle = curl_init($url);

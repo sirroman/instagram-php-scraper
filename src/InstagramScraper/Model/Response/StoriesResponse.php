@@ -3,13 +3,13 @@
 namespace InstagramScraper\Model\Response;
 
 use InstagramScraper\Model\Account;
-use InstagramScraper\Model\Media;
+use InstagramScraper\Model\Story;
 
 /**
  * Class AccountResponse
  * @package InstagramScraper\Model
  */
-class AccountResponse
+class StoriesResponse
 {
     /**
      * Account
@@ -17,20 +17,24 @@ class AccountResponse
      */
     public $account;
 
+
+    public $hasPublicStory = false;
+
     /**
-     * @var Media[]
+     * @var Story[]
      */
-    public $medias;
+    public $stories;
+
+
+
+
+
+
 
     /**
      * @var PageInfo
      */
     public $pageInfo;
-
-    /**
-     * @var string
-     */
-    public $rhxGis;
 
     public function __construct()
     {

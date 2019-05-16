@@ -15,6 +15,7 @@ use InstagramScraper\Model\Location;
 use InstagramScraper\Model\Media;
 use InstagramScraper\Model\Response\LocationResponse;
 use InstagramScraper\Model\Response\MediasResponse;
+use InstagramScraper\Model\Response\StoriesResponse;
 use InstagramScraper\Model\Story;
 use InstagramScraper\Model\Tag;
 use InstagramScraper\Model\TagPage;
@@ -50,7 +51,7 @@ class Instagram
     private $sessionUsername;
     private $sessionPassword;
     private $userSession;
-    private $rhxGis = null;
+    protected $rhxGis = null;
     private $userAgent = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/69.0.3497.100 Safari/537.36';
 
     /**
@@ -200,6 +201,11 @@ class Instagram
     public static function disableProxy()
     {
         Request::proxy('');
+    }
+
+
+    public function setRhxGis( $rhxGis ){
+        $this->rhxGis = $rhxGis;
     }
 
     /**
@@ -355,6 +361,7 @@ class Instagram
         }
 
         $userArray = self::extractSharedDataFromBody($response->raw_body);
+        $this->rhxGis= $userArray['rhx_gis'];
 
         if (!isset($userArray['entry_data']['ProfilePage'][0]['graphql']['user'])) {
             throw new InstagramNotFoundException('Account with this username does not exist', static::HTTP_NOT_FOUND);
@@ -374,6 +381,8 @@ class Instagram
         }
         $accountPage->pageInfo->end_cursor = $userArray['entry_data']['ProfilePage'][0]['graphql']['user']['edge_owner_to_timeline_media']['page_info']['end_cursor'];
         $accountPage->pageInfo->has_next_page = $userArray['entry_data']['ProfilePage'][0]['graphql']['user']['edge_owner_to_timeline_media']['page_info']['has_next_page'];
+
+        $accountPage->rhxGis = $userArray['rhx_gis'];
 
         return $accountPage;
     }
@@ -396,7 +405,8 @@ class Instagram
     private static function extractSharedDataFromBody($body)
     {
         if (preg_match_all('#\_sharedData \= (.*?)\;\<\/script\>#', $body, $out)) {
-            return json_decode($out[1][0], true, 512, JSON_BIGINT_AS_STRING);
+            $data = json_decode($out[1][0], true, 512, JSON_BIGINT_AS_STRING);
+            return $data;
         }
         return null;
     }
@@ -488,6 +498,10 @@ class Instagram
             }
         }
 
+        return $this->rhxGis;
+    }
+
+    public function getCachedRhxGis(){
         return $this->rhxGis;
     }
 
@@ -1717,5 +1731,50 @@ class Instagram
         if ($jsonResponse['status'] !== 'ok') {
             throw new InstagramException('Response status is ' . $jsonResponse['status'] . '. Body: ' . static::getErrorBody($response->body) . ' Something went wrong. Please report issue.', $response->code);
         }
+    }
+
+
+    public function getHighlighReels(int $userId ){
+
+        $variables = json_encode([
+            'user_id' => (string)$userId,
+            'include_chaining' => false,
+            'include_reel' => false,
+            'include_suggested_users' => false,
+            'include_logged_out_extras' => true,
+            'include_highlight_reels' => true,
+        ]);
+
+        $response = Request::get(Endpoints::getHighlightReelsLink($variables), $this->generateHeaders($this->userSession, $this->generateGisToken($variables)));
+
+        if ($response->code === static::HTTP_NOT_FOUND) {
+            throw new InstagramNotFoundException('Highlight reels not exists', static::HTTP_NOT_FOUND);
+        }
+        if (static::HTTP_RATE_LIMIT === $response->code) {
+            throw new InstagramRateLimitException('Rate limit exception',static::HTTP_RATE_LIMIT);
+        }
+        if ($response->code !== static::HTTP_OK) {
+            throw new InstagramException('Response code is ' . $response->code . '. Body: ' . static::getErrorBody($response->body) . ' Something went wrong. Please report issue.', $response->code);
+        }
+
+
+        $this->parseCookies($response->headers);
+
+        $jsonResponse = $this->decodeRawBodyToJson($response->raw_body);
+
+//        print_r($jsonResponse);
+
+        $storiesResponse = new StoriesResponse();
+
+        $storiesResponse->hasPublicStory = (bool) $jsonResponse['data']['user']['has_public_story'];
+
+        foreach ($jsonResponse['data']['user']['edge_highlight_reels']['edges'] as $edge) {
+            $story = Story::create($edge['node']);
+            $storiesResponse->stories[] = $story;
+            $account = $story->getOwner();
+            $storiesResponse->account = $account;
+        }
+
+        return $storiesResponse;
     }
 }

@@ -9,7 +9,7 @@ namespace InstagramScraper\Model;
 class Story extends Media
 {
     private $skip_prop = [
-        'owner' => true,
+//        'owner' => true,
     ];
 
     /***
