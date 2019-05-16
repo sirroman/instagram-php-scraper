@@ -582,7 +582,23 @@ class Media extends AbstractModel
                 $this->shortCode = $value;
                 $this->link = Endpoints::getMediaPageLink($this->shortCode);
                 break;
-            case 'edge_media_to_comment':
+            case 'edge_media_to_comment': // @TODO - скорее всего надо будет потом удалить
+                if (isset($arr[$prop]['count'])) {
+                    $this->commentsCount = (int) $arr[$prop]['count'];
+                };
+                if (isset($arr[$prop]['edges']) && is_array($arr[$prop]['edges'])) {
+                    foreach ($arr[$prop]['edges'] as $commentData) {
+                        $this->comments[] = Comment::create($commentData['node']);
+                    }
+                }
+                if (isset($arr[$prop]['page_info']['has_next_page'])) {
+                    $this->hasMoreComments = (bool) $arr[$prop]['page_info']['has_next_page'];
+                }
+                if (isset($arr[$prop]['page_info']['end_cursor'])) {
+                    $this->commentsNextPage = (string) $arr[$prop]['page_info']['end_cursor'];
+                }
+                break;
+            case 'edge_media_to_parent_comment':
                 if (isset($arr[$prop]['count'])) {
                     $this->commentsCount = (int) $arr[$prop]['count'];
                 }

@@ -103,6 +103,7 @@ class InstagramTest extends TestCase
         unset ($unparsed['dimensions']);
         unset ($unparsed['gating_info']);
         unset ($unparsed['media_preview']);
+//        print_r($unparsed);
         $this->assertEquals(0, count ($unparsed));
 
 
@@ -148,7 +149,7 @@ class InstagramTest extends TestCase
         $this->assertFalse($accountPage->account->isRequestedByViewer());
         $this->assertEquals(3, $accountPage->medias[1]->getOwnerId());
 
-        $this->assertGreaterThan(10, strlen($accountPage->rhxGis));
+//        $this->assertGreaterThan(10, strlen($accountPage->rhxGis));
 
 
         unset ($unparsed['external_url_linkshimmed']);
@@ -167,9 +168,10 @@ class InstagramTest extends TestCase
         unset ($unparsed['gating_info']);
         unset ($unparsed['media_preview']);
         unset ($unparsed['accessibility_caption']);
+//        print_r($unparsed);
         $this->assertEquals(0, count ($unparsed));
 //        print_r($accountPage->medias[0]);
-        $instagram->setRhxGis($accountPage->rhxGis);
+//        $instagram->setRhxGis($accountPage->rhxGis);
         $response = $instagram->getMediasByUserId($accountPage->account->getId(), 12, $accountPage->pageInfo->end_cursor);
         $this->assertEquals(12, count($response->medias));
         $this->assertEquals(1, $response->pageInfo->has_next_page);
@@ -187,7 +189,7 @@ class InstagramTest extends TestCase
         sleep(self::SLEEP);
         $instagram = new Instagram();
         $media = $instagram->getMediaByUrl('https://www.instagram.com/p/BHaRdodBouH');
-
+//print_r($media);
         $this->assertEquals('kevin', $media->getOwner()->getUsername());
         $this->assertEquals(3, $media->getOwner()->getId());
         $this->assertGreaterThan(20, count($media->getComments()));
@@ -290,8 +292,9 @@ class InstagramTest extends TestCase
         $this->assertGreaterThan(200000, $tagPage->count);
 //        print_r($tagPage);
         $this->assertInstanceOf(Media::class, $tagPage->medias[0]);
-        $this->assertInstanceOf(Media::class, $tagPage->topMedias[0]);
-        $this->assertGreaterThan(3, $tagPage->topMedias[0]->getOwnerId());
+        $mediaTop =  array_pop($tagPage->topMedias);
+        $this->assertInstanceOf(Media::class, $mediaTop);
+        $this->assertGreaterThan(3, $mediaTop->getOwnerId());
         $this->assertGreaterThan(3, $tagPage->medias[0]->getOwnerId());
 
     }

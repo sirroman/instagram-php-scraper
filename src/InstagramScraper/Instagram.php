@@ -51,7 +51,6 @@ class Instagram
     private $sessionUsername;
     private $sessionPassword;
     private $userSession;
-    protected $rhxGis = null;
     private $userAgent = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/69.0.3497.100 Safari/537.36';
 
     /**
@@ -201,11 +200,6 @@ class Instagram
     public static function disableProxy()
     {
         Request::proxy('');
-    }
-
-
-    public function setRhxGis( $rhxGis ){
-        $this->rhxGis = $rhxGis;
     }
 
     /**
@@ -361,7 +355,6 @@ class Instagram
         }
 
         $userArray = self::extractSharedDataFromBody($response->raw_body);
-        $this->rhxGis= $userArray['rhx_gis'];
 
         if (!isset($userArray['entry_data']['ProfilePage'][0]['graphql']['user'])) {
             throw new InstagramNotFoundException('Account with this username does not exist', static::HTTP_NOT_FOUND);
@@ -382,7 +375,6 @@ class Instagram
         $accountPage->pageInfo->end_cursor = $userArray['entry_data']['ProfilePage'][0]['graphql']['user']['edge_owner_to_timeline_media']['page_info']['end_cursor'];
         $accountPage->pageInfo->has_next_page = $userArray['entry_data']['ProfilePage'][0]['graphql']['user']['edge_owner_to_timeline_media']['page_info']['has_next_page'];
 
-        $accountPage->rhxGis = $userArray['rhx_gis'];
 
         return $accountPage;
     }
@@ -432,7 +424,7 @@ class Instagram
                 'after' => (string)$maxId
             ]);
 
-            $response = Request::get(Endpoints::getAccountMediasJsonLink($variables), $this->generateHeaders($this->userSession, $this->generateGisToken($variables)));
+            $response = Request::get(Endpoints::getAccountMediasJsonLink($variables));
             if (static::HTTP_RATE_LIMIT === $response->code) {
                 throw new InstagramRateLimitException('Rate limit exception',static::HTTP_RATE_LIMIT);
             }
@@ -441,7 +433,7 @@ class Instagram
             }
 
             $arr = $this->decodeRawBodyToJson($response->raw_body);
-
+//print_r($arr);
             if (!is_array($arr)) {
                 throw new InstagramException('Response code is ' . $response->code . '. Body: ' . static::getErrorBody($response->body) . ' Something went wrong. Please report issue.', $response->code);
             }
@@ -471,38 +463,6 @@ class Instagram
         }
 
         return $mediasResponse;
-    }
-
-    /**
-     * @param $variables
-     * @return string
-     * @throws InstagramException
-     */
-    private function generateGisToken($variables)
-    {
-        return md5(implode(':', [$this->getRhxGis(), $variables]));
-    }
-
-    /**
-     * @return null
-     * @throws InstagramException
-     */
-    private function getRhxGis()
-    {
-        if ($this->rhxGis === null) {
-            try {
-                $sharedData = $this->getSharedDataFromPage();
-                $this->rhxGis = $sharedData['rhx_gis'];
-            } catch (\Exception $exception) {
-                throw new InstagramException('Could not extract gis from page');
-            }
-        }
-
-        return $this->rhxGis;
-    }
-
-    public function getCachedRhxGis(){
-        return $this->rhxGis;
     }
 
     /**
@@ -665,8 +625,7 @@ class Instagram
         ]);
 
         $response = Request::get(
-            Endpoints::getAccountMediasJsonLink($variables),
-            $this->generateHeaders($this->userSession, $this->generateGisToken($variables))
+            Endpoints::getAccountMediasJsonLink($variables)
         );
         if (static::HTTP_RATE_LIMIT === $response->code) {
             throw new InstagramRateLimitException('Rate limit exception',static::HTTP_RATE_LIMIT);
@@ -752,7 +711,7 @@ class Instagram
             ]);
 
             $commentsUrl = Endpoints::getCommentsBeforeCommentIdByCode($variables);
-            $response = Request::get($commentsUrl, $this->generateHeaders($this->userSession, $this->generateGisToken($variables)));
+            $response = Request::get($commentsUrl);
             // use a raw constant in the code is not a good idea!!
             if (static::HTTP_RATE_LIMIT === $response->code) {
                 throw new InstagramRateLimitException('Rate limit exception',static::HTTP_RATE_LIMIT);
@@ -1745,7 +1704,7 @@ class Instagram
             'include_highlight_reels' => true,
         ]);
 
-        $response = Request::get(Endpoints::getHighlightReelsLink($variables), $this->generateHeaders($this->userSession, $this->generateGisToken($variables)));
+        $response = Request::get(Endpoints::getHighlightReelsLink($variables));
 
         if ($response->code === static::HTTP_NOT_FOUND) {
             throw new InstagramNotFoundException('Highlight reels not exists', static::HTTP_NOT_FOUND);
