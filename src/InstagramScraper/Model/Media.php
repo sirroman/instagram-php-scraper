@@ -148,6 +148,11 @@ class Media extends AbstractModel
     protected $comments = [];
 
     /**
+     * @var Comment[]
+     */
+    protected $previewComments = [];
+
+    /**
      * @var bool
      */
     protected $hasMoreComments = false;
@@ -421,7 +426,14 @@ class Media extends AbstractModel
     }
 
     /**
+     * @return Comment[]
+     */
+    public function getPreviewComments()
+    {
+        return $this->previewComments;
+    }
 
+    /**
      * @return bool
      */
     public function hasMoreComments()
@@ -581,6 +593,16 @@ class Media extends AbstractModel
             case 'shortcode':
                 $this->shortCode = $value;
                 $this->link = Endpoints::getMediaPageLink($this->shortCode);
+                break;
+            case 'edge_media_preview_comment':
+                if (isset($arr[$prop]['count'])) {
+                    $this->commentsCount = (int) $arr[$prop]['count'];
+                }
+                if (isset($arr[$prop]['edges']) && is_array($arr[$prop]['edges'])) {
+                    foreach ($arr[$prop]['edges'] as $commentData) {
+                        $this->previewComments[] = Comment::create($commentData['node']);
+                    }
+                }
                 break;
             case 'edge_media_to_comment': // @TODO - скорее всего надо будет потом удалить
                 if (isset($arr[$prop]['count'])) {

@@ -457,6 +457,7 @@ class Instagram
                 $mediasResponse->medias[] = Media::create($mediaArray['node']);
                 $index++;
             }
+
             if (empty($nodes) || !isset($nodes)) {
                 return $mediasResponse;
             }
@@ -609,7 +610,25 @@ class Instagram
     public function getPaginateMedias($username, $maxId = '')
     {
         $account = $this->getAccount($username);
-        $hasNextPage = true;
+
+        return $this->getPaginateMediasByUserId(
+            $account->getId(),
+            Endpoints::getAccountMediasRequestCount(),
+            $maxId
+        );
+    }
+
+    /**
+     * @param int $id
+     * @param int $count
+     * @param string $maxId
+     *
+     * @return array
+     * @throws InstagramException
+     */
+    public function getPaginateMediasByUserId($id, $count = 12, $maxId = '')
+    {
+        $hasNextPage = false;
         $medias = [];
 
         $toReturn = [
@@ -619,8 +638,8 @@ class Instagram
         ];
 
         $variables = json_encode([
-            'id' => (string)$account->getId(),
-            'first' => (string)Endpoints::getAccountMediasRequestCount(),
+            'id' => (string)$id,
+            'first' => (string)$count,
             'after' => (string)$maxId
         ]);
 
@@ -998,7 +1017,7 @@ class Instagram
      */
     public function getPaginateMediasByTag($tag, $maxId = '')
     {
-        $hasNextPage = true;
+        $hasNextPage = false;
         $medias = [];
 
         $toReturn = [
@@ -1041,6 +1060,67 @@ class Instagram
         $maxId = $arr['graphql']['hashtag']['edge_hashtag_to_media']['page_info']['end_cursor'];
         $hasNextPage = $arr['graphql']['hashtag']['edge_hashtag_to_media']['page_info']['has_next_page'];
         $count = $arr['graphql']['hashtag']['edge_hashtag_to_media']['count'];
+
+        $toReturn = [
+            'medias' => $medias,
+            'count' => $count,
+            'maxId' => $maxId,
+            'hasNextPage' => $hasNextPage,
+        ];
+
+        return $toReturn;
+    }
+
+    /**
+     * @param string $facebookLocationId
+     * @param string $maxId
+     *
+     * @return array
+     * @throws InstagramException
+     */
+    public function getPaginateMediasByLocationId($facebookLocationId, $maxId = '')
+    {
+        $hasNextPage = true;
+        $medias = [];
+
+        $toReturn = [
+            'medias' => $medias,
+            'maxId' => $maxId,
+            'hasNextPage' => $hasNextPage,
+        ];
+
+        $response = Request::get(Endpoints::getMediasJsonByLocationIdLink($facebookLocationId, $maxId),
+            $this->generateHeaders($this->userSession));
+
+        if ($response->code !== static::HTTP_OK) {
+            throw new InstagramException('Response code is ' . $response->code . '. Body: ' . static::getErrorBody($response->body) . ' Something went wrong. Please report issue.', $response->code);
+        }
+
+        $this->parseCookies($response->headers);
+
+        $arr = $this->decodeRawBodyToJson($response->raw_body);
+
+        if (!is_array($arr)) {
+            throw new InstagramException('Response decoding failed. Returned data corrupted or this library outdated. Please report issue');
+        }
+
+        if (empty($arr['graphql']['location']['edge_location_to_media']['count'])) {
+            return $toReturn;
+        }
+
+        $nodes = $arr['graphql']['location']['edge_location_to_media']['edges'];
+
+        if (empty($nodes)) {
+            return $toReturn;
+        }
+
+        foreach ($nodes as $mediaArray) {
+            $medias[] = Media::create($mediaArray['node']);
+        }
+
+        $maxId = $arr['graphql']['location']['edge_location_to_media']['page_info']['end_cursor'];
+        $hasNextPage = $arr['graphql']['location']['edge_location_to_media']['page_info']['has_next_page'];
+        $count = $arr['graphql']['location']['edge_location_to_media']['count'];
 
         $toReturn = [
             'medias' => $medias,
