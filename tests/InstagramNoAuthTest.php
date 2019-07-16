@@ -194,7 +194,7 @@ class InstagramTest extends TestCase
         $this->assertEquals(3, $media->getOwner()->getId());
         $this->assertGreaterThan(20, count($media->getComments()));
         // @TODO проверить позже может появятся лайки в будущем?
-        //$this->assertEquals(10, count($media->getLikes()));
+        $this->assertEquals(0, count($media->getLikes()));
         $this->assertNull($media->getOwner()->getMediaCount());
         $this->assertNull($media->getOwner()->getFollowedByCount());
         $this->assertNull($media->getOwner()->getFollowsCount());
@@ -211,6 +211,38 @@ class InstagramTest extends TestCase
         }
         // getMediaByUrl does not return small images
         $this->assertEquals(0, $countSquare);
+
+        $this->assertEquals('No photo description available.', $media->getAccessibilityCaption());
+        $this->assertGreaterThan(100, strlen($media->getPreview()));
+        $this->assertEquals(['height'=>1081, 'width'=>1080], $media->getDimensions());
+        $this->assertEquals(null, $media->getVideoDuration());
+
+        $this->assertEquals(0, count($media->getTaggedUsers()));
+
+        // check what instagram did not add new interesting properties
+        $unparsed = $media->getUnparsed();
+
+        unset($unparsed['gating_info']);
+        unset($unparsed['should_log_client_event']);
+        unset($unparsed['tracking_token']);
+        unset($unparsed['comments_disabled']);
+        unset($unparsed['edge_media_to_sponsor_user']);
+        unset($unparsed['viewer_has_liked']);
+        unset($unparsed['viewer_has_saved']);
+        unset($unparsed['viewer_has_saved_to_collection']);
+        unset($unparsed['viewer_in_photo_of_you']);
+        unset($unparsed['viewer_can_reshare']);
+        unset($unparsed['has_ranked_comments']);
+        unset($unparsed['edge_web_media_to_related_media']);
+        unset($unparsed['encoding_status']);
+        unset($unparsed['is_published']);
+        unset($unparsed['dash_info']);
+        unset($unparsed['edge_web_media_to_related_media']);
+        unset($unparsed['product_type']);
+
+//        print_r($unparsed);
+        $this->assertEquals(0, count($unparsed));
+
     }
 
     /**
@@ -225,7 +257,7 @@ class InstagramTest extends TestCase
         $this->assertEquals(Media::TYPE_SIDECAR, $media->getType());
         $this->assertEquals('beyonce', $media->getOwner()->getUsername());
         $this->assertGreaterThan(5, count($media->getComments()));
-        //$this->assertGreaterThan(5, count($media->getLikes()));
+        $this->assertEquals(0, count($media->getLikes()));
         $this->assertEquals(5, count($media->getSidecarMedias()));
         $this->assertGreaterThan(20, strlen($media->getImageHighResolutionUrl()));
         $this->assertGreaterThan(20, strlen($media->getImageStandardResolutionUrl()));
@@ -250,11 +282,12 @@ class InstagramTest extends TestCase
         sleep(self::SLEEP);
         $instagram = new Instagram();
         $media = $instagram->getMediaById(1733446317571985644);
+//        print_r($media);
         $this->assertEquals(Media::TYPE_VIDEO, $media->getType());
         $this->assertEquals(200, $this->getHttpCode($media->getVideoStandardResolutionUrl()));
         $this->assertEquals('beyonce', $media->getOwner()->getUsername());
         $this->assertGreaterThan(15, count($media->getComments()));
-        //$this->assertGreaterThan(5, count($media->getLikes()));
+        $this->assertEquals(0, count($media->getLikes()));
         $this->assertEquals(0, count($media->getSidecarMedias()));
         $this->assertGreaterThan(20, strlen($media->getImageHighResolutionUrl()));
         $this->assertGreaterThan(20, strlen($media->getImageStandardResolutionUrl()));
@@ -268,7 +301,104 @@ class InstagramTest extends TestCase
         // getMediaByUrl does not return small images
         $this->assertEquals(0, $countSquare);
 
+
+        $this->assertEquals(null, $media->getAccessibilityCaption());
+        $this->assertGreaterThan(100, strlen($media->getPreview()));
+        $this->assertEquals(['height'=>612, 'width'=>612], $media->getDimensions());
+        $this->assertEquals(45, $media->getVideoDuration());
+
+        $this->assertEquals(0, count($media->getTaggedUsers()));
+
+        // check what instagram did not add new interesting properties
+        $unparsed = $media->getUnparsed();
+
+        unset($unparsed['gating_info']);
+        unset($unparsed['should_log_client_event']);
+        unset($unparsed['tracking_token']);
+        unset($unparsed['comments_disabled']);
+        unset($unparsed['edge_media_to_sponsor_user']);
+        unset($unparsed['viewer_has_liked']);
+        unset($unparsed['viewer_has_saved']);
+        unset($unparsed['viewer_has_saved_to_collection']);
+        unset($unparsed['viewer_in_photo_of_you']);
+        unset($unparsed['viewer_can_reshare']);
+        unset($unparsed['has_ranked_comments']);
+        unset($unparsed['edge_web_media_to_related_media']);
+        unset($unparsed['encoding_status']);
+        unset($unparsed['is_published']);
+        unset($unparsed['dash_info']);
+        unset($unparsed['edge_web_media_to_related_media']);
+        unset($unparsed['product_type']);
+
+//        print_r($unparsed);
+        $this->assertEquals(0, count($unparsed));
+
     }
+
+    /**
+     * @group getNonAuthMediaWithUsers
+     * @group noAuth
+     */
+    public function testGetMediaPageByCodeWithUsers()
+    {
+        sleep(self::SLEEP);
+        $instagram = new Instagram();
+        $media = $instagram->getMediaByCode('Bz2xf5KBOMN');
+//        print_r($media);
+//print_r($media->getUnparsed());
+
+        $this->assertEquals('adamandeve_hotel', $media->getOwner()->getUsername());
+        $this->assertEquals(1351600589, $media->getOwner()->getId());
+        $this->assertGreaterThan(20, count($media->getComments()));
+        // @TODO проверить позже может появятся лайки в будущем?
+        $this->assertEquals(0, count($media->getLikes()));
+        $this->assertNull($media->getOwner()->getMediaCount());
+        $this->assertNull($media->getOwner()->getFollowedByCount());
+        $this->assertNull($media->getOwner()->getFollowsCount());
+//        $this->assertGreaterThan(time()-5, $media->get)
+        $this->assertGreaterThan(20, strlen($media->getImageHighResolutionUrl()));
+        $this->assertGreaterThan(20, strlen($media->getImageStandardResolutionUrl()));
+        $this->assertGreaterThan(20, strlen($media->getImageLowResolutionUrl()));
+        $this->assertGreaterThan(20, strlen($media->getImageThumbnailUrl()));
+
+        $countSquare = 0;
+        foreach ($media->getSquareImages() as $key => $squareImage) {
+            $this->assertGreaterThan(20, strlen($squareImage));
+            $countSquare++;
+        }
+        // getMediaByUrl does not return small images
+        $this->assertEquals(0, $countSquare);
+
+
+        $this->assertEquals('Image may contain: one or more people, sky, outdoor and water', $media->getAccessibilityCaption());
+        $this->assertGreaterThan(100, strlen($media->getPreview()));
+        $this->assertEquals(['height'=>1080, 'width'=>1080], $media->getDimensions());
+
+        $this->assertEquals(11, count($media->getTaggedUsers()));
+        $this->assertInstanceOf(\InstagramScraper\Model\Account::class, $media->getTaggedUsers()[0]->getUser());
+
+        // check what instagram did not add new interesting properties
+        $unparsed = $media->getUnparsed();
+
+        unset($unparsed['gating_info']);
+        unset($unparsed['should_log_client_event']);
+        unset($unparsed['tracking_token']);
+        unset($unparsed['comments_disabled']);
+        unset($unparsed['edge_media_to_sponsor_user']);
+        unset($unparsed['viewer_has_liked']);
+        unset($unparsed['viewer_has_saved']);
+        unset($unparsed['viewer_has_saved_to_collection']);
+        unset($unparsed['viewer_in_photo_of_you']);
+        unset($unparsed['viewer_can_reshare']);
+        unset($unparsed['has_ranked_comments']);
+        unset($unparsed['edge_web_media_to_related_media']);
+
+//        print_r($unparsed);
+        $this->assertEquals(0, count($unparsed));
+
+
+    }
+
 
     /**
      * @group getNoAuthMediasByTag

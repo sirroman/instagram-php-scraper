@@ -173,6 +173,32 @@ class Media extends AbstractModel
     protected $locationSlug;
 
     /**
+     * @var array
+     */
+    protected $dimensions;
+
+    /**
+     * @var string
+     */
+    protected $preview;
+
+    /**
+     * @var null | string
+     */
+    protected $accessibilityCaption;
+
+
+    /**
+     * @var array
+     */
+    protected $taggedUsers =[];
+
+    /**
+     * @var float
+     */
+    protected $videoDuration;
+
+    /**
      * @param string $code
      *
      * @return int
@@ -467,6 +493,47 @@ class Media extends AbstractModel
     }
 
     /**
+     * @return string
+     */
+    public function getPreview(): string
+    {
+        return $this->preview;
+    }
+
+
+    /**
+     * @return null|string
+     */
+    public function getAccessibilityCaption() :?string
+    {
+        return $this->accessibilityCaption;
+    }
+
+    /**
+     * @return array
+     */
+    public function getDimensions(): ?array
+    {
+        return $this->dimensions;
+    }
+
+    /**
+     * @return array
+     */
+    public function getTaggedUsers(): array
+    {
+        return $this->taggedUsers;
+    }
+
+    /**
+     * @return null | float
+     */
+    public function getVideoDuration(): ?float
+    {
+        return $this->videoDuration;
+    }
+
+    /**
      * @param $value
      * @param $prop
      */
@@ -581,6 +648,10 @@ class Media extends AbstractModel
             case 'video_view_count':
                 $this->videoViews = $value;
                 break;
+            case 'video_duration':
+                $this->videoDuration = $value;
+                break;
+
             case 'caption_is_edited':
                 $this->isCaptionEdited = $value;
                 break;
@@ -695,6 +766,25 @@ class Media extends AbstractModel
             case 'title':
                 $this->caption = $value;
                 break;
+            case 'dimensions':
+                $this->dimensions = $value;
+                break;
+            case 'media_preview':
+                $this->preview = $value;
+                break;
+            case 'accessibility_caption':
+                $this->accessibilityCaption = $value;
+                break;
+            case 'edge_media_to_tagged_user':
+
+
+                foreach ($value['edges'] as $item) {
+                    $this->taggedUsers[] = TagInMedia::create($item['node']);
+
+                }
+                break;
+
+
             default:
                 $this->data[$prop] = $value;
         }
