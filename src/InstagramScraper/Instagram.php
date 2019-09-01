@@ -274,6 +274,10 @@ class Instagram
                 $headers['x-instagram-gis'] = $gisToken;
             }
         }
+        
+        if (empty($headers['x-csrftoken'])) {
+            $headers['x-csrftoken'] = md5(uniqid()); // this can be whatever, insta doesn't like an empty value
+        }        
 
         return $headers;
     }
@@ -312,6 +316,36 @@ class Instagram
     public function resetUserAgent()
     {
         return $this->userAgent = null;
+    }
+
+    /**
+     * Gets logged user feed.
+     *
+     * @throws     \InstagramScraper\Exception\InstagramException
+     * @throws     \InstagramScraper\Exception\InstagramNotFoundException
+     *
+     * @return     Media[]
+     */
+    public function getFeed()
+    {
+        $response = Request::get(Endpoints::getFeedJson(),
+            $this->generateHeaders($this->userSession));
+
+        if ($response->code === static::HTTP_NOT_FOUND) {
+            throw new InstagramNotFoundException('Account with given username does not exist.');
+        }
+        if ($response->code !== static::HTTP_OK) {
+            throw new InstagramException('Response code is ' . $response->code . '. Body: ' . static::getErrorBody($response->body) . ' Something went wrong. Please report issue.');
+        }
+
+        $this->parseCookies($response->headers);
+        $jsonResponse = $this->decodeRawBodyToJson($response->raw_body);
+        $medias = [];
+        $nodes = (array)@$jsonResponse['data']['user']["edge_web_feed_timeline"]['edges'];
+        foreach ($nodes as $mediaArray) {
+            $medias[] = Media::create($mediaArray['node']);
+        }
+        return $medias;
     }
 
     /**
@@ -1263,7 +1297,7 @@ class Instagram
     {
 
         $response = Request::get(Endpoints::getMediasJsonByLocationIdLink($facebookLocationId));
-
+//print_r($response);
         if ($response->code === static::HTTP_NOT_FOUND) {
             throw new InstagramNotFoundException('Location with this id doesn\'t exist', static::HTTP_NOT_FOUND);
         }
@@ -1273,7 +1307,6 @@ class Instagram
         if ($response->code !== static::HTTP_OK) {
             throw new InstagramException('Response code is ' . $response->code . '. Body: ' . static::getErrorBody($response->body) . ' Something went wrong. Please report issue.', $response->code);
         }
-
 
         $this->parseCookies($response->headers);
 
@@ -1499,18 +1532,22 @@ class Instagram
                 throw new InstagramException('Response code is ' . $response->code . '. Body: ' . static::getErrorBody($response->body) . ' Something went wrong. Please report issue.', $response->code);
             }
             preg_match('/"csrf_token":"(.*?)"/', $response->body, $match);
-            if (isset($match[1])) {
 
-                $csrfToken = $match[1];
-            }
-
+            $csrfToken = isset($match[1]) ? $match[1] : '';
             $cookies = $this->parseCookies($response->headers);
 
+            $mid = array_key_exists('mid', $cookies) ? $cookies['mid'] : '';
 
-            $cookies = static::parseCookies($response->headers);
-            $mid = $cookies['mid'];
+            $cookieString = 'ig_cb=1';
+            if ($csrfToken !== '') {
+                $cookieString .= '; csrftoken=' . $csrfToken;
+            }
+            if ($mid !== '') {
+                $cookieString .= '; mid=' . $mid;
+            }
+
             $headers = [
-                'cookie' => "ig_cb=1; csrftoken=$csrfToken; mid=$mid;",
+                'cookie' => $cookieString,
                 'referer' => Endpoints::BASE_URL . '/',
                 'x-csrftoken' => $csrfToken,
                 'X-CSRFToken' => $csrfToken,
