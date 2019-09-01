@@ -23,6 +23,7 @@ class InstagramTest extends TestCase
         sleep(self::SLEEP);
         $i = new Instagram();
         $location =$i->getLocationById(1032158659);
+
         $this->assertEquals('Публичная библиотека. Центр культурных программ', $location->getName());
 //        $this->assertEquals(200, $this->getHttpCode($location->getProfilePicUrl()));
         $this->assertEquals(39.7263, $location->getLng());
@@ -78,8 +79,9 @@ class InstagramTest extends TestCase
     public function testGetMediasByUserId()
     {
         $instagram = new Instagram();
+        //$response = $instagram->getMediasByUserId(3, 13, 'QVFDUWxvUUMzWWU3OGY2QnBMbGhfbGFYS1ZOck1Cc0lKSGhaVjlQbG1EeHJJeXMxVmpQeFVjMjQ2clhHVTJCc1h6eFdTOWxqTDJ0N0pIT2IwNmVkN252ZA==');
         $response = $instagram->getMediasByUserId(3, 13);
-//print_r($response->medias[0]); exit();
+//print_r($response->medias[0]); //exit();
         $this->assertEquals(13, count($response->medias));
         $this->assertEquals(1, $response->pageInfo->has_next_page);
         $this->assertGreaterThan(1600, $response->count);
@@ -87,8 +89,8 @@ class InstagramTest extends TestCase
         $this->assertEquals(3, $response->medias[0]->getOwner()->getId());
         $this->assertGreaterThan(20, strlen($response->medias[0]->getImageHighResolutionUrl()));
         $this->assertGreaterThan(20, strlen($response->medias[0]->getImageThumbnailUrl()));
-        $this->assertEquals(0, strlen($response->medias[0]->getImageStandardResolutionUrl()));
-        $this->assertEquals(0, strlen($response->medias[0]->getImageLowResolutionUrl()));
+        $this->assertGreaterThan(50, strlen($response->medias[0]->getImageStandardResolutionUrl()));
+        $this->assertGreaterThan(50, strlen($response->medias[0]->getImageLowResolutionUrl()));
 
         $countSquare = 0;
         foreach ($response->medias[0]->getSquareImages() as $key => $squareImage) {
@@ -103,6 +105,14 @@ class InstagramTest extends TestCase
         unset ($unparsed['dimensions']);
         unset ($unparsed['gating_info']);
         unset ($unparsed['media_preview']);
+        unset ($unparsed['should_log_client_event']);
+        unset ($unparsed['viewer_has_liked']);
+        unset ($unparsed['viewer_has_saved']);
+        unset ($unparsed['viewer_has_saved_to_collection']);
+        unset ($unparsed['viewer_in_photo_of_you']);
+        unset ($unparsed['viewer_can_reshare']);
+        unset ($unparsed['edge_media_to_sponsor_user']);
+        unset ($unparsed['tracking_token']);
 //        print_r($unparsed);
         $this->assertEquals(0, count ($unparsed));
 
@@ -171,7 +181,7 @@ class InstagramTest extends TestCase
 //        print_r($unparsed);
         $this->assertEquals(0, count ($unparsed));
 //        print_r($accountPage->medias[0]);
-//        $instagram->setRhxGis($accountPage->rhxGis);
+
         $response = $instagram->getMediasByUserId($accountPage->account->getId(), 12, $accountPage->pageInfo->end_cursor);
         $this->assertEquals(12, count($response->medias));
         $this->assertEquals(1, $response->pageInfo->has_next_page);

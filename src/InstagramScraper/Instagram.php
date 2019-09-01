@@ -377,6 +377,9 @@ class Instagram
     public function getAccountPage($username) : AccountResponse {
 
         $response = Request::get(Endpoints::getAccountPageLink($username), $this->generateHeaders($this->userSession));
+        if (strpos($response->headers[0], '301 Moved') > 1 && (isset ($response->headers['Location'][0]) && (strpos($response->headers['Location'][0], 'instagram.com/accounts/login/') > 1 || strpos($response->headers['Location'][1], 'instagram.com/accounts/login/') > 1 ))) {
+            throw new InstagramRateLimitException('Rate limit exception',static::HTTP_RATE_LIMIT);
+        }
 
         if (static::HTTP_NOT_FOUND === $response->code) {
             throw new InstagramNotFoundException('Account with given username does not exist.', 404);
