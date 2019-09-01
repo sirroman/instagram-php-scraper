@@ -6,6 +6,7 @@ use InstagramScraper\Instagram;
 use InstagramScraper\Model\Media;
 use phpFastCache\CacheManager;
 use PHPUnit\Framework\TestCase;
+use InstagramScraper\Exception\InstagramAuthRequiredException;
 
 /**
  * Class InstagramTest
@@ -22,13 +23,14 @@ class InstagramTest extends TestCase
     {
         sleep(self::SLEEP);
         $i = new Instagram();
+        $this->expectException(InstagramAuthRequiredException::class);
         $location =$i->getLocationById(1032158659);
 
-        $this->assertEquals('Публичная библиотека. Центр культурных программ', $location->getName());
+//        $this->assertEquals('Публичная библиотека. Центр культурных программ', $location->getName());
 //        $this->assertEquals(200, $this->getHttpCode($location->getProfilePicUrl()));
-        $this->assertEquals(39.7263, $location->getLng());
-        $this->assertEquals(47.22837, $location->getLat());
-//        print_r($location);
+//        $this->assertEquals(39.7263, $location->getLng());
+//        $this->assertEquals(47.22837, $location->getLat());
+
     }
 
 
@@ -39,7 +41,7 @@ class InstagramTest extends TestCase
     {
 
         $i = new Instagram();
-
+        $this->expectException(InstagramAuthRequiredException::class);
         $r =$i->getLocationPage(1032158659);
         $this->assertEquals(1032158659, $r->location->getId());
         $this->assertEquals('Публичная библиотека. Центр культурных программ', $r->location->getName());

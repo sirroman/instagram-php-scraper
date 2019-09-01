@@ -4,6 +4,7 @@ namespace InstagramScraper;
 
 use InstagramAPI\Exception\CheckpointRequiredException;
 use InstagramScraper\Exception\InstagramAuthException;
+use InstagramScraper\Exception\InstagramAuthRequiredException;
 use InstagramScraper\Exception\InstagramException;
 use InstagramScraper\Exception\InstagramNotFoundException;
 use InstagramScraper\Exception\InstagramRateLimitException;
@@ -1255,6 +1256,10 @@ class Instagram
             //$response = Request::get(Endpoints::getMediasJsonByLocationIdLink($facebookLocationId, $offset),$this->generateHeaders($this->userSession));
             $response = Request::get(Endpoints::getMediasJsonByLocationIdLink($facebookLocationId, $offset));
 
+            if ($this->isAuthRedirect($response)){
+                throw new InstagramAuthRequiredException("Auth required");
+            }
+
             if ($response->code === static::HTTP_NOT_FOUND) {
                 throw new InstagramNotFoundException('Location with this id doesn\'t exist', static::HTTP_NOT_FOUND);
             }
@@ -1288,6 +1293,26 @@ class Instagram
         return $result;
     }
 
+    private function isAuthRedirect($response) : bool {
+
+        if ((strpos($response->headers[0], '301 Moved') > 1) || (strpos($response->headers[0], 'HTTP/2 302') === 0)){
+            $loc = "";
+            if (isset ($response->headers['Location'])){
+                $loc = $response->headers['Location'];
+            }
+            if (isset ($response->headers['location'])){
+                $loc = $response->headers['location'];
+            }
+
+            if (strpos($loc, 'instagram.com/accounts/login/') > 1 || strpos($loc, 'instagram.com/accounts/login/') > 1 ){
+                return true;
+            }
+
+        }
+        return false;
+    }
+
+
     /**
      * @param string $facebookLocationId
      *
@@ -1300,7 +1325,11 @@ class Instagram
     {
 
         $response = Request::get(Endpoints::getMediasJsonByLocationIdLink($facebookLocationId));
-//print_r($response);
+
+        if ($this->isAuthRedirect($response)) {
+            throw new InstagramAuthRequiredException('Auth required');
+        }
+
         if ($response->code === static::HTTP_NOT_FOUND) {
             throw new InstagramNotFoundException('Location with this id doesn\'t exist', static::HTTP_NOT_FOUND);
         }
