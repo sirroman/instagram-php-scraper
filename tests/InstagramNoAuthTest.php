@@ -86,7 +86,7 @@ class InstagramTest extends TestCase
 //print_r($response->medias[0]); //exit();
         $this->assertEquals(13, count($response->medias));
         $this->assertEquals(1, $response->pageInfo->has_next_page);
-        $this->assertGreaterThan(1600, $response->count);
+        $this->assertGreaterThan(1100, $response->count);
         $this->assertEquals(3, $response->medias[0]->getOwnerId());
         $this->assertEquals(3, $response->medias[0]->getOwner()->getId());
         $this->assertGreaterThan(20, strlen($response->medias[0]->getImageHighResolutionUrl()));
@@ -122,7 +122,7 @@ class InstagramTest extends TestCase
         $response = $instagram->getMediasByUserId(3, 13, $response->pageInfo->end_cursor);
         $this->assertEquals(13, count($response->medias));
         $this->assertEquals(1, $response->pageInfo->has_next_page);
-        $this->assertGreaterThan(1600, $response->count);
+        $this->assertGreaterThan(1100, $response->count);
     }
 
     /**
@@ -180,6 +180,8 @@ class InstagramTest extends TestCase
         unset ($unparsed['gating_info']);
         unset ($unparsed['media_preview']);
         unset ($unparsed['accessibility_caption']);
+        unset ($unparsed['fact_check_overall_rating']);
+        unset ($unparsed['fact_check_information']);
 //        print_r($unparsed);
         $this->assertEquals(0, count ($unparsed));
 //        print_r($accountPage->medias[0]);
@@ -187,7 +189,7 @@ class InstagramTest extends TestCase
         $response = $instagram->getMediasByUserId($accountPage->account->getId(), 12, $accountPage->pageInfo->end_cursor);
         $this->assertEquals(12, count($response->medias));
         $this->assertEquals(1, $response->pageInfo->has_next_page);
-        $this->assertGreaterThan(1600, $response->count);
+        $this->assertGreaterThan(1100, $response->count);
 
     }
 
@@ -224,7 +226,7 @@ class InstagramTest extends TestCase
         // getMediaByUrl does not return small images
         $this->assertEquals(0, $countSquare);
 
-        $this->assertEquals('No photo description available.', $media->getAccessibilityCaption());
+        $this->assertEquals(null, $media->getAccessibilityCaption());
         $this->assertGreaterThan(100, strlen($media->getPreview()));
         $this->assertEquals(['height'=>1081, 'width'=>1080], $media->getDimensions());
         $this->assertEquals(null, $media->getVideoDuration());
@@ -251,6 +253,8 @@ class InstagramTest extends TestCase
         unset($unparsed['dash_info']);
         unset($unparsed['edge_web_media_to_related_media']);
         unset($unparsed['product_type']);
+        unset($unparsed['fact_check_overall_rating']);
+        unset($unparsed['fact_check_information']);
 
 //        print_r($unparsed);
         $this->assertEquals(0, count($unparsed));
@@ -341,6 +345,8 @@ class InstagramTest extends TestCase
         unset($unparsed['dash_info']);
         unset($unparsed['edge_web_media_to_related_media']);
         unset($unparsed['product_type']);
+        unset($unparsed['fact_check_overall_rating']);
+        unset($unparsed['fact_check_information']);
 
 //        print_r($unparsed);
         $this->assertEquals(0, count($unparsed));
@@ -382,7 +388,7 @@ class InstagramTest extends TestCase
         $this->assertEquals(0, $countSquare);
 
 
-        $this->assertEquals('Image may contain: one or more people, sky, outdoor and water', $media->getAccessibilityCaption());
+        $this->assertEquals(null, $media->getAccessibilityCaption());
         $this->assertGreaterThan(100, strlen($media->getPreview()));
         $this->assertEquals(['height'=>1080, 'width'=>1080], $media->getDimensions());
 
@@ -404,6 +410,8 @@ class InstagramTest extends TestCase
         unset($unparsed['viewer_can_reshare']);
         unset($unparsed['has_ranked_comments']);
         unset($unparsed['edge_web_media_to_related_media']);
+        unset($unparsed['fact_check_overall_rating']);
+        unset($unparsed['fact_check_information']);
 
 //        print_r($unparsed);
         $this->assertEquals(0, count($unparsed));

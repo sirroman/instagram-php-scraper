@@ -1,6 +1,7 @@
 # Instagram PHP Scraper
 This library is based on the Instagram web version. We develop it because nowadays it is hard to get an approved Instagram application. The purpose is to support every feature that the web desktop and mobile version support. 
 
+
 ## Upstream
 https://help.github.com/articles/configuring-a-remote-for-a-fork/
 
@@ -8,6 +9,12 @@ https://help.github.com/articles/configuring-a-remote-for-a-fork/
 git remote add upstream https://github.com/postaddictme/instagram-php-scraper
 git pull upstream master
 ```
+
+## Dependencies
+
+- [PSR-16](http://www.php-fig.org/psr/psr-16/)
+
+
 
 ## Code Example
 ```php
@@ -27,7 +34,9 @@ echo $nonPrivateAccountMedias[0]->getLink();
 If you use authentication it is recommended to cache the user session. In this case you don't need to run the `$instagram->login()` method every time your program runs:
 
 ```php
-$instagram = Instagram::withCredentials('username', 'password', '/path/to/cache/folder/');
+use Phpfastcache\Helper\Psr16Adapter;
+
+$instagram = Instagram::withCredentials('username', 'password', new Psr16Adapter('Files'));
 $instagram->login(); // will use cached session if you can force login $instagram->login(true)
 $account = $instagram->getAccountById(3);
 echo $account->getUsername();
