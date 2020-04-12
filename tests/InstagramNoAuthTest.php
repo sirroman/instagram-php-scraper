@@ -12,7 +12,7 @@ use InstagramScraper\Exception\InstagramAuthRequiredException;
  * Class InstagramTest
      * @group noAuth
  */
-class InstagramTest extends TestCase
+class InstagramNoAuthTest extends TestCase
 {
     const SLEEP =2;
 
@@ -23,13 +23,16 @@ class InstagramTest extends TestCase
     {
         sleep(self::SLEEP);
         $i = new Instagram();
-        $this->expectException(InstagramAuthRequiredException::class);
+//        $this->expectException(InstagramAuthRequiredException::class);
         $location =$i->getLocationById(1032158659);
 
-//        $this->assertEquals('Публичная библиотека. Центр культурных программ', $location->getName());
-//        $this->assertEquals(200, $this->getHttpCode($location->getProfilePicUrl()));
-//        $this->assertEquals(39.7263, $location->getLng());
-//        $this->assertEquals(47.22837, $location->getLat());
+        $this->assertEquals('Публичная библиотека. Центр культурных программ', $location->getName());
+        $this->assertEquals(200, $this->getHttpCode($location->getProfilePicUrl()));
+        $this->assertEquals(39.7263, $location->getLng());
+        $this->assertEquals(47.22837, $location->getLat());
+
+//        $this->assertGreaterThan(2, $location->get);
+
 
     }
 
@@ -41,7 +44,7 @@ class InstagramTest extends TestCase
     {
 
         $i = new Instagram();
-        $this->expectException(InstagramAuthRequiredException::class);
+//        $this->expectException(InstagramAuthRequiredException::class);
         $r =$i->getLocationPage(1032158659);
         $this->assertEquals(1032158659, $r->location->getId());
         $this->assertEquals('Публичная библиотека. Центр культурных программ', $r->location->getName());
@@ -61,6 +64,7 @@ class InstagramTest extends TestCase
         $this->assertInstanceOf(Media::class, $r->topMedias[0]);
         $this->assertGreaterThan(3,$r->topMedias[0]->getOwnerId());
         $this->assertGreaterThan(3,$r->medias[0]->getOwnerId());
+        $this->assertGreaterThan(3,$r->medias[0]->getLikesCount());
 
         $r =$i->getLocationPage(1032158659, $r->medias[count($r->medias)-1]->getId());
         $this->assertGreaterThan(10, count($r->medias));
@@ -115,6 +119,8 @@ class InstagramTest extends TestCase
         unset ($unparsed['viewer_can_reshare']);
         unset ($unparsed['edge_media_to_sponsor_user']);
         unset ($unparsed['tracking_token']);
+        unset ($unparsed['fact_check_overall_rating']);
+        unset ($unparsed['fact_check_information']);
 //        print_r($unparsed);
         $this->assertEquals(0, count ($unparsed));
 
@@ -169,6 +175,11 @@ class InstagramTest extends TestCase
         unset ($unparsed['edge_felix_video_timeline']);
         unset ($unparsed['edge_saved_media']);
         unset ($unparsed['edge_media_collections']);
+        unset ($unparsed['restricted_by_viewer']);
+        unset ($unparsed['has_ar_effects']);
+        unset ($unparsed['category_id']);
+        unset ($unparsed['overall_category_name']);
+//        print_r($unparsed);
         $this->assertEquals(0, count ($unparsed));
 
 
@@ -209,7 +220,8 @@ class InstagramTest extends TestCase
         $this->assertGreaterThan(20, count($media->getComments()));
         // @TODO проверить позже может появятся лайки в будущем?
         $this->assertEquals(0, count($media->getLikes()));
-        $this->assertNull($media->getOwner()->getMediaCount());
+        //print_r($media->getOwner());
+        $this->assertGreaterThan(100, $media->getOwner()->getMediaCount());
         $this->assertNull($media->getOwner()->getFollowedByCount());
         $this->assertNull($media->getOwner()->getFollowsCount());
 //        $this->assertGreaterThan(time()-5, $media->get)
@@ -256,6 +268,11 @@ class InstagramTest extends TestCase
         unset($unparsed['fact_check_overall_rating']);
         unset($unparsed['fact_check_information']);
 
+        unset($unparsed['sensitivity_friction_info']);
+        unset($unparsed['media_overlay_info']);
+        unset($unparsed['edge_media_to_hoisted_comment']);
+        unset($unparsed['commenting_disabled_for_viewer']);
+        unset($unparsed['edge_related_profiles']);
 //        print_r($unparsed);
         $this->assertEquals(0, count($unparsed));
 
@@ -348,6 +365,14 @@ class InstagramTest extends TestCase
         unset($unparsed['fact_check_overall_rating']);
         unset($unparsed['fact_check_information']);
 
+        unset($unparsed['sensitivity_friction_info']);
+        unset($unparsed['media_overlay_info']);
+        unset($unparsed['commenting_disabled_for_viewer']);
+        $this->assertEquals(0, count($unparsed['edge_media_to_hoisted_comment']['edges']));
+        unset($unparsed['edge_media_to_hoisted_comment']);
+        $this->assertEquals(0, count($unparsed['edge_related_profiles']['edges']));
+        unset($unparsed['edge_related_profiles']);
+
 //        print_r($unparsed);
         $this->assertEquals(0, count($unparsed));
 
@@ -370,7 +395,7 @@ class InstagramTest extends TestCase
         $this->assertGreaterThan(20, count($media->getComments()));
         // @TODO проверить позже может появятся лайки в будущем?
         $this->assertEquals(0, count($media->getLikes()));
-        $this->assertNull($media->getOwner()->getMediaCount());
+        $this->assertGreaterThan(100,$media->getOwner()->getMediaCount());
         $this->assertNull($media->getOwner()->getFollowedByCount());
         $this->assertNull($media->getOwner()->getFollowsCount());
 //        $this->assertGreaterThan(time()-5, $media->get)
@@ -412,6 +437,14 @@ class InstagramTest extends TestCase
         unset($unparsed['edge_web_media_to_related_media']);
         unset($unparsed['fact_check_overall_rating']);
         unset($unparsed['fact_check_information']);
+
+        unset($unparsed['sensitivity_friction_info']);
+        unset($unparsed['media_overlay_info']);
+        unset($unparsed['edge_media_to_hoisted_comment']);
+        unset($unparsed['commenting_disabled_for_viewer']);
+        $this->assertEquals(0, count($unparsed['edge_related_profiles']['edges']));
+
+        unset($unparsed['edge_related_profiles']);
 
 //        print_r($unparsed);
         $this->assertEquals(0, count($unparsed));
