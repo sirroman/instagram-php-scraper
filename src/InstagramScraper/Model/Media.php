@@ -210,6 +210,11 @@ class Media extends AbstractModel
     protected $locationAddressJson;
 
     /**
+     * @var bool
+     */
+    protected bool $hasAudio;
+
+    /**
      * @param string $code
      *
      * @return int
@@ -689,7 +694,9 @@ class Media extends AbstractModel
             case 'video_duration':
                 $this->videoDuration = $value;
                 break;
-
+            case 'has_audio':
+                $this->hasAudio = $value;
+                break;
             case 'caption_is_edited':
                 $this->isCaptionEdited = $value;
                 break;
@@ -889,5 +896,13 @@ class Media extends AbstractModel
     public function getOwner()
     {
         return $this->owner;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isHasAudio(): bool
+    {
+        return $this->hasAudio;
     }
 }

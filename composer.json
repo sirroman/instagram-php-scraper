@@ -15,7 +15,7 @@
     }
   ],
   "require": {
-    "php": ">=7.1.0",
+    "php": ">=7.4",
     "mashape/unirest-php": "3.0.*",
     "ext-curl": "*",
     "ext-json": "*",

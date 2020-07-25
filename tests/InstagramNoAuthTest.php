@@ -318,7 +318,8 @@ class InstagramNoAuthTest extends TestCase
         sleep(self::SLEEP);
         $instagram = new Instagram();
         $media = $instagram->getMediaById(1733446317571985644);
-//        print_r($media);
+        //print_r($media);
+
         $this->assertEquals(Media::TYPE_VIDEO, $media->getType());
         $this->assertEquals(200, $this->getHttpCode($media->getVideoStandardResolutionUrl()));
         $this->assertEquals('beyonce', $media->getOwner()->getUsername());
@@ -531,6 +532,17 @@ class InstagramNoAuthTest extends TestCase
     }
 
 
+    /**
+     * @group getNonAuthMediaComments
+     * @group noAuth
+     */
+    public function testGetMediaComments() {
+        // does not use it оно возвращает плоский ответ, наверное старое API скоро выключат 25.07.2020
+        $instagram = new Instagram();
+        $comm = $instagram->getMediaCommentsByCode('CCidLLnohzF'); // https://www.instagram.com/p/BoZiHEqhTrP/
+
+//        print_r($comm);
+    }
 
     protected function getHttpCode($url) {
         $handle = curl_init($url);
