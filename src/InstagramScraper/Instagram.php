@@ -383,7 +383,7 @@ class Instagram
         }
 
         $userArray = self::extractSharedDataFromBody($response->raw_body);
-
+        //print_r($userArray);
         if ($this->isAccountAgeRestricted($userArray, $response->raw_body)) {
             throw new InstagramAgeRestrictedException('Account with given username is age-restricted.');
         }
@@ -497,7 +497,7 @@ class Instagram
             $mediasResponse->pageInfo->end_cursor = $maxId;
             $mediasResponse->pageInfo->has_next_page = $isMoreAvailable;
             $mediasResponse->count = $arr['data']['user']['edge_owner_to_timeline_media']['count'];
-
+            //print_r(count($arr['data']['user']['edge_owner_to_timeline_media']['edges']));
             foreach ($nodes as $mediaArray) {
                 if ($index === $count) {
                     return $mediasResponse;
@@ -1937,7 +1937,7 @@ class Instagram
         ]);
 
         $response = Request::get(Endpoints::getHighlightReelsLink($variables));
-
+        //print_r($response->raw_body);
         if ($response->code === static::HTTP_NOT_FOUND) {
             throw new InstagramNotFoundException('Highlight reels not exists', static::HTTP_NOT_FOUND);
         }
@@ -1956,6 +1956,10 @@ class Instagram
 //        print_r($jsonResponse);
 
         $storiesResponse = new StoriesResponse();
+
+        if (is_null($jsonResponse['data']['user'])){
+            throw new InstagramNotFoundException('user does not exists', static::HTTP_NOT_FOUND);
+        }
 
         $storiesResponse->hasPublicStory = (bool) $jsonResponse['data']['user']['has_public_story'];
 

@@ -23,7 +23,7 @@ class InstagramTest extends TestCase
     private static $username;
     private static $password;
 
-    public static function setUpBeforeClass()
+    public static function setUpBeforeClass() : void
     {
         require 'instagramAuth.php'; // content of this file: <?php $login = "my_instagram_login"; $pass = "my_instagram_pass";
         self::$username = $login;
