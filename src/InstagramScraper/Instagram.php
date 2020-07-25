@@ -585,9 +585,14 @@ class Instagram
             }
 
             $arr = $this->decodeRawBodyToJson($response->raw_body);
-//print_r($arr);
+
             if (!is_array($arr)) {
-                throw new InstagramException('Response code is ' . $response->code . '. Body: ' . static::getErrorBody($response->body) . ' Something went wrong. Please report issue.', $response->code);
+                throw new InstagramException('No data from instagram ' . $response->code . '. Body: ' . static::getErrorBody($response->body) . ' Something went wrong. Please report issue.', $response->code);
+            }
+
+
+            if (!is_array($arr['data']['user'])) {
+                throw new InstagramNotFoundException('No user ' . $response->code . '. Body: ' . static::getErrorBody($response->body) . ' Something went wrong. Please report issue.', $response->code);
             }
 
             $nodes = $arr['data']['user']['edge_owner_to_timeline_media']['edges'];

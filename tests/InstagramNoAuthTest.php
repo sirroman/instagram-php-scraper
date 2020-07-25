@@ -132,6 +132,19 @@ class InstagramNoAuthTest extends TestCase
     }
 
     /**
+     * @group getMediasByUserIdNoUser
+     * @group noAuth
+     */
+    public function testGetMediasByUserIdNoUser()
+    {
+        $instagram = new Instagram();
+        $this->expectException(\InstagramScraper\Exception\InstagramNotFoundException::class);
+        $response = $instagram->getMediasByUserId(2, 13);
+
+    }
+
+
+    /**
      * @group accountPage
      * @group noAuth
      * @throws \InstagramScraper\Exception\InstagramException
